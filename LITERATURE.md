@@ -96,3 +96,170 @@ agree with careful published work we had not read, which is the outcome you want
 from a pipeline validated against known answers. But it does sharpen the standing
 conclusion: **searching where the literature has already looked produces results
 the literature already has.**
+
+---
+
+# The ML asset-pricing literature, and where this project sits in it
+
+Seven papers, each connecting to something this project hit directly — in three
+cases to a mistake we made and could not name at the time.
+
+## Avramov, Cheng & Metzker (2023) — the paper we independently re-ran
+
+*Machine Learning vs. Economic Restrictions*, Management Science.
+
+ML return forecasts lose most of their profitability once microcaps, distressed
+and unrated firms are excluded and costs are charged. What survives is
+concentrated where **limits to arbitrage are high**.
+
+This is the closest paper to what this project did, and we arrived at it
+backwards — measuring gross first, then adding turnover, borrow, delisting and
+volume caps until nothing was left. Their headline is our Part 2 and Steps 1–7.
+
+**Where we disagree, and it is informative.** They find ML signals strongest
+where arbitrage is costliest. Our liquidity-band test found **no gradient at
+all** — gross Sharpe within one standard error of zero from $160M median daily
+volume down to $1M. Two possible reasons, and we cannot separate them: they test
+*characteristic-based* signals while we tested *price-based* reversal, and their
+sample predates ours. If the answer is the former, it says the residual-reversal
+family is uniquely dead while characteristic signals merely retreat downmarket.
+
+## Gu, Kelly & Xiu (2021) — we asked their question and answered it badly
+
+*Autoencoder Asset Pricing Models*, Journal of Econometrics.
+
+Factor loadings are a **nonlinear function of firm characteristics**, estimated
+by a neural network, inside a constrained autoencoder. It strictly generalises
+IPCA (the linear-beta special case) and keeps the no-arbitrage factor structure
+rather than forecasting returns directly. It beats IPCA, PCA and observable
+factors on ~94 characteristics.
+
+Midway through this project we asked whether the beta step could be nonlinear and
+tested quadratic and asymmetric betas. Both made things **worse** — residual
+AR(1) went to +0.0149 and +0.0749 against the linear −0.0037, which is
+overfitting: 10–20 parameters on 60 daily observations.
+
+GKX shows the error precisely. **We put the nonlinearity in the wrong argument.**
+Nonlinear *in the factors*, fit on 60 days, is hopeless. Nonlinear *in
+characteristics*, fit across the whole panel, is the version that works — the
+parameters are shared across every stock, so the effective sample is enormous.
+
+This is directly actionable: we hold a survivorship-free panel, 209 OSAP
+characteristics, and a crosswalk validated at r = 0.9998 on a held-out signal.
+Every result in this project used PCA-5. The authors' own best arm was IPCA at
+4.16 and we never built it, let alone its autoencoder generalisation.
+
+## Kelly, Malamud & Zhou (2024) — and why our null result is not a counterexample
+
+*The Virtue of Complexity in Return Prediction*, Journal of Finance.
+
+Models with more parameters than observations can beat parsimonious ones out of
+sample; out-of-sample R² can stay negative while the timing strategy's Sharpe
+rises.
+
+We found architecture did not matter — 769 parameters and 1,785 parameters gave
+4.92 and 4.77, inside noise. **That is not evidence against VoC**, because we
+were never near the regime it describes: 770 parameters against 3.9M (day, stock)
+observations is deeply *under*-parameterised. c = P/T ≈ 0.0002, not ≥ 1.
+
+Nagel's critique — that ridgeless regression on random features with short
+windows behaves as a kernel smoother reproducing vol-timed momentum rather than
+learning from predictors — has a miniature analogue here. Our fitted 30-lag ridge
+filter **collapsed onto lag 1** (+0.77, −1.00 on the last two coefficients),
+rediscovering one-day reversal from 30 free parameters and then underperforming
+it (2.70 vs 3.14). Flexible estimator, simple recovered signal, worse than the
+simple signal directly. Same shape of finding at a far smaller scale.
+
+## Chen, Pelger & Zhu (2024) — the objective, not the architecture
+
+*Deep Learning in Asset Pricing*, Management Science.
+
+The SDF is `M = 1 − w'R` with weights a network function of characteristics and
+an LSTM-compressed macro state, trained to satisfy **conditional no-arbitrage
+moments** via an adversarial network choosing the hardest instruments to price.
+
+Same senior author as the paper we replicated. Note what changes between them:
+DLSA optimises portfolio Sharpe; CPZ optimises a no-arbitrage condition. Both
+papers' contribution is the **objective**, not the network.
+
+That is the single clearest lesson of this project, arrived at empirically: three
+architectures within noise of each other, while the objective — Sharpe with no
+cost term — produced a book with 1.64% volatility that needed 6× leverage and
+died on turnover. The adversarial instrument search is also, structurally, an
+automated null-hunt: a second model seeking the assets the first cannot price.
+
+## Jiang, Kelly & Xiu (2023) — their caveat is our central result
+
+*(Re-)Imag(in)ing Price Trends*, Journal of Finance.
+
+Render OHLC, volume and moving averages as images; train CNNs to predict return
+sign. Very high Sharpe at weekly horizons, patterns transfer across horizons and
+countries, and the signal is not simply momentum or reversal.
+
+Their stated caveat — *the gross numbers are strongest where turnover and
+trading costs bite hardest* — is the conclusion of this entire project, stated as
+a footnote.
+
+One genuine difference worth noting: their input carries **volume and intraday
+range**, ours carried only the cumulative residual path. When we conditioned on
+relative volume we found the sign flip (−0.0182 → +0.0024), so volume does carry
+information our representation discarded.
+
+## Leippold, Wang & Zhou (2022) — the "where", not the "what"
+
+*Machine Learning in the Chinese Stock Market*, JFE.
+
+The same methods yield substantially stronger predictability in China, where the
+investor base is retail-dominated and short-selling is constrained. Liquidity
+characteristics dominate variable importance, unlike the US. Predictability
+concentrates in small and retail-heavy stocks, and shrinks once T+1 settlement,
+price limits and costs are imposed.
+
+This is the sharpest answer to "where should we look" that the literature gives.
+Our conclusion was that documented edges in US large caps are gone; theirs is
+that the same methods work where the marginal investor is less sophisticated.
+**Different market, not different model.**
+
+## Bianchi, Büchner & Tamoni (2021) — different asset class
+
+*Bond Risk Premiums with Machine Learning*, RFS.
+
+Nonlinearity in macro variables predicts Treasury excess returns; the premia are
+countercyclical and the gains are not replicated by linear shrinkage on the same
+inputs.
+
+Relevant as proof the approach is not equity-specific. Our infrastructure is
+equity-shaped, but the method — pre-register, null, cost, walk-forward — is not.
+
+---
+
+# A way forward the literature actually supports
+
+The papers that work share three properties. We had one.
+
+| | GKX / CPZ | this project |
+|---|---|---|
+| inputs | firm characteristics | **prices only** |
+| structure | factor model / no-arbitrage | free-form |
+| innovation | the objective | Sharpe objective ✓ |
+
+**The concrete next step is the autoencoder factor model on our own data**, and
+it is well-defined rather than exploratory:
+
+1. Betas as a **neural function of characteristics**, factors as
+   characteristic-managed portfolios — GKX's constrained autoencoder.
+2. Fit on the **survivorship-free panel** with the **209 OSAP characteristics**
+   already joined through a validated crosswalk.
+3. Benchmark against PCA-5, IPCA (linear-beta special case), and the autoencoder,
+   on the **same residuals, same harness, same costs** as everything else here.
+4. Judge on **net-of-cost** performance and against a null, because the whole
+   contribution of this project's method is that gross numbers mislead.
+
+This does three things at once: it is the principled version of the nonlinear-beta
+test we botched, it builds the authors' own best arm which we never did, and it
+puts characteristics into a project that has only ever seen prices.
+
+Honest expectation: Avramov, Cheng & Metzker says most of it will not survive
+costs. But it is the first time in this project that the *inputs* would change
+rather than the model — and our own evidence says inputs were always the
+constraint.
