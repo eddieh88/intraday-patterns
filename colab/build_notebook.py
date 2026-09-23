@@ -86,22 +86,35 @@ cells.append(CO("""H, W_PER_DAY, NDAYS = 64, 3, 20
 W = W_PER_DAY * NDAYS
 VOL_H = H // 5                      # volume panel height
 PRICE_H = H - VOL_H
+MA_WIN = NDAYS                      # JKX: MA window == days in the image
 
-def make_image(o, h, l, c, v):
-    \"\"\"OHLCV arrays of length NDAYS -> (H, W) uint8 image, or None if degenerate.\"\"\"
+def make_image(o, h, l, c, v, ma):
+    \"\"\"OHLCV + moving-average arrays of length NDAYS -> (H, W) uint8, or None.
+
+    `ma` is the moving average at each visible day, which needs MA_WIN days of
+    prior data -- so every window carries 2*NDAYS of history.
+    \"\"\"
     c0 = c[0]
     if not np.isfinite(c0) or c0 <= 0: return None
-    o, h, l, c = (x / c0 for x in (o, h, l, c))      # level-invariant
-    lo, hi = np.nanmin(l), np.nanmax(h)
-    if not np.isfinite(lo) or not np.isfinite(hi) or hi <= lo: return None
+    o, h, l, c, ma = (x / c0 for x in (o, h, l, c, ma))
+    lo = np.nanmin([np.nanmin(l), np.nanmin(ma)])   # the MA participates in the
+    hi = np.nanmax([np.nanmax(h), np.nanmax(ma)])   # scaling; in JKX Fig 2 it
+    if not np.isfinite([lo, hi]).all() or hi <= lo: return None   # sits above the bars
     img = np.zeros((H, W), dtype=np.uint8)
     y = lambda p: int(np.clip(round((p - lo) / (hi - lo) * (PRICE_H - 1)), 0, PRICE_H - 1))
     for d in range(NDAYS):
-        if not np.isfinite([o[d], h[d], l[d], c[d]]).all(): continue
         x = d * W_PER_DAY
-        img[PRICE_H - 1 - y(h[d]) : PRICE_H - y(l[d]), x + 1] = 255   # high-low bar
-        img[PRICE_H - 1 - y(o[d]), x] = 255                            # open tick
-        img[PRICE_H - 1 - y(c[d]), x + 2] = 255                        # close tick
+        if np.isfinite([h[d], l[d]]).all():                 # JKX fn.5: no high/low,
+            img[PRICE_H - 1 - y(h[d]) : PRICE_H - y(l[d]), x + 1] = 255   # leave black
+            if np.isfinite(o[d]): img[PRICE_H - 1 - y(o[d]), x] = 255
+            if np.isfinite(c[d]): img[PRICE_H - 1 - y(c[d]), x + 2] = 255
+    # MA line: one pixel in the middle column per day, dots connected
+    pts = [(d * W_PER_DAY + 1, PRICE_H - 1 - y(ma[d]))
+           for d in range(NDAYS) if np.isfinite(ma[d])]
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        for xx in range(x0, x1 + 1):
+            yy = int(round(y0 + (y1 - y0) * (xx - x0) / max(x1 - x0, 1)))
+            img[np.clip(yy, 0, PRICE_H - 1), xx] = 255
     vmax = np.nanmax(v) if np.isfinite(v).any() else 0
     if vmax > 0:
         for d in range(NDAYS):
@@ -120,14 +133,14 @@ def build(sym_df):
                  for k in ("open","high","low","close","volume"))
     t = sym_df.timestamp.values
     bad = sym_df.bad_day.values          # days adjacent to an unadjusted split
+    ma_full = pd.Series(c).rolling(MA_WIN).mean().values
     X, Y, T = [], [], []
-    for i in range(NDAYS, len(c) - FWD):
+    for i in range(NDAYS + MA_WIN, len(c) - FWD):
         # skip any window or forward period containing a known-corrupt day.
-        # the vendor does not reliably adjust reverse splits, and one bad day
-        # inside the window corrupts the whole image, not just the label.
+        # one bad day inside the window corrupts the image, not just the label.
         if bad[i-NDAYS : i+FWD].any(): continue
-        img = make_image(o[i-NDAYS:i], h[i-NDAYS:i], l[i-NDAYS:i],
-                         c[i-NDAYS:i], v[i-NDAYS:i])
+        sl = slice(i-NDAYS, i)
+        img = make_image(o[sl], h[sl], l[sl], c[sl], v[sl], ma_full[sl])
         if img is None: continue
         r = c[i+FWD-1]/c[i-1] - 1.0
         if not np.isfinite(r) or abs(r) > 3.0: continue
@@ -226,39 +239,34 @@ cells.append(MD("""## 7. THE CONTROL — Brownian motion must return ~50%
 JKX's placebo. Feed the CNN images simulated from driftless random walks. If it
 does not return ~0.50, it has learned a bias rather than a pattern, and nothing
 below is interpretable. **The notebook stops here if this fails.**"""))
-cells.append(CO("""# Simulated images must match the REAL volume distribution.  Flat volume is a
-# giveaway the CNN can key on, which would score every synthetic image
-# out-of-distribution.  Sample real 20-day volume profiles from the panel.
+cells.append(CO("""# Simulated images must match the REAL image distribution in every respect the
+# CNN can see.  Two things bit us here: flat volume (fixed by sampling real
+# profiles) and a MISSING MOVING-AVERAGE LINE.  Real images carry an MA line;
+# if simulated ones do not, the CNN separates them instantly and every pattern
+# is scored out of distribution.  So simulated paths run 2*NDAYS long and the
+# visible window is the last NDAYS, leaving room for the MA.
 _vol_pool = []
 for _s, _g in df.groupby("symbol", sort=False):
     _v = _g.volume.values.astype(np.float64)
-    for _i in range(NDAYS, len(_v), 97):            # thin stride, plenty of draws
+    for _i in range(NDAYS, len(_v), 97):
         _w = _v[_i-NDAYS:_i]
         if np.isfinite(_w).all() and _w.max() > 0: _vol_pool.append(_w / _w.max())
 _vol_pool = np.array(_vol_pool)
 print(f"real volume profiles available for simulation: {len(_vol_pool):,}")
 
-def sim_to_image(path, rng):
-    \"\"\"close-price path of length NDAYS -> OHLCV image, with REAL volume\"\"\"
-    c = path
-    o = np.concatenate([[c[0]], c[:-1]])
+def sim_to_image(path_2n, rng):
+    \"\"\"close path of length 2*NDAYS -> image of its LAST NDAYS, with MA + volume\"\"\"
+    ma_full = pd.Series(path_2n).rolling(MA_WIN).mean().values
+    c = path_2n[NDAYS:]; ma = ma_full[NDAYS:]
+    o = np.concatenate([[path_2n[NDAYS-1]], c[:-1]])
     spread = np.abs(c - o) * 0.5 + np.abs(c).mean() * 0.004
     h = np.maximum(o, c) + spread * rng.random(NDAYS)
     l = np.minimum(o, c) - spread * rng.random(NDAYS)
     v = _vol_pool[rng.integers(len(_vol_pool))]
-    return make_image(o, h, l, c, v)
-
-def probe(path_fn, n=10000, seed=0):
-    rng = np.random.default_rng(seed)
-    imgs = []
-    for k in range(n):
-        p = path_fn(rng)
-        img = sim_to_image(p, rng)
-        if img is not None: imgs.append(np.packbits(img > 0))
-    return predict(np.stack(imgs))
+    return make_image(o, h, l, c, v, ma)
 
 SIGMA = 0.02
-brown = probe(lambda r: np.cumprod(1 + r.normal(0, SIGMA, NDAYS)))
+brown = probe(lambda r: np.cumprod(1 + r.normal(0, SIGMA, 2*NDAYS)))
 t, pv = stats.ttest_1samp(brown, 0.5)
 print(f"Brownian control: mean P(up) = {brown.mean():.4f}  (sd {brown.std():.4f})")
 print(f"  vs 0.50 -> t = {t:+.2f}, p = {pv:.3g}")
@@ -319,10 +327,14 @@ cells.append(CO("""NOISE = 0.35        # fraction of move size added as iid nois
 AMP   = 0.10        # pattern amplitude as a fraction of price
 
 def make_path_fn(pts):
+    \"\"\"2*NDAYS path: a flat-ish random-walk lead-in so the MA has history,
+    then the pattern itself over the visible NDAYS.\"\"\"
     def f(rng):
+        lead = rng.normal(0, SIGMA*NOISE, NDAYS).cumsum()
         base = seg(pts, NDAYS) * AMP * rng.uniform(0.7, 1.3)
-        base = base + rng.normal(0, SIGMA*NOISE, NDAYS).cumsum()
-        return np.cumprod(1 + np.diff(np.concatenate([[0], base])))
+        base = base + rng.normal(0, SIGMA*NOISE, NDAYS).cumsum() + lead[-1]
+        full = np.concatenate([lead, base])
+        return np.cumprod(1 + np.diff(np.concatenate([[0], full])))
     return f
 
 rows = []
