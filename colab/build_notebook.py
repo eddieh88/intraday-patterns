@@ -199,13 +199,17 @@ print(f"train {len(i_tr):,} | val {len(i_va):,} | test {len(i_te):,}")
 print(f"P(up): train {Y[i_tr].mean():.4f}  val {Y[i_va].mean():.4f}  test {Y[i_te].mean():.4f}")
 
 class DS(torch.utils.data.Dataset):
-    def __init__(s, X, Y, mu=0.0, sd=1.0): s.X, s.Y, s.mu, s.sd = X, Y, mu, sd
+    def __init__(s, X, Y, mu=0.0, sd=1.0):
+        # float() matters: a numpy float64 here upcasts the image to double and
+        # AMP refuses to mix double input with half weights
+        s.X, s.Y, s.mu, s.sd = X, Y, float(mu), float(sd)
     def __len__(s): return len(s.X)
     def __getitem__(s, i):
         img = np.unpackbits(s.X[i])[:H*W].reshape(1, H, W).astype(np.float32)
-        return torch.from_numpy((img-s.mu)/s.sd), s.Y[i]
+        img = (img - s.mu) / s.sd
+        return torch.from_numpy(img.astype(np.float32, copy=False)), s.Y[i]
 
-MU = np.unpackbits(X[i_tr[:20000]], axis=1)[:, :H*W].mean()*1.0   # JKX normalise
+MU = float(np.unpackbits(X[i_tr[:20000]], axis=1)[:, :H*W].mean())   # JKX normalise
 SD = max(float(np.sqrt(MU*(1-MU))), 1e-6)
 print(f"train pixel mean {MU:.4f}, sd {SD:.4f}")
 
