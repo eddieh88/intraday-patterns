@@ -158,6 +158,31 @@ print(f"\\n{len(X):,} images | packed {X.nbytes/1e6:.0f} MB "
       f"(unpacked would be {len(X)*H*W/1e9:.1f} GB)")
 print(f"base rate P(up) = {Y.mean():.4f}")"""))
 
+cells.append(MD("""## 4b. Cache the images
+
+Image construction is ~36 minutes of single-threaded Python for 1.65M images.
+Cache so a disconnect or restart does not repeat it. `/content` is fast but
+lost on runtime restart; Drive survives everything and takes a few minutes to
+write ~800 MB."""))
+cells.append(CO("""import os
+USE_DRIVE = False
+if USE_DRIVE:
+    from google.colab import drive; drive.mount("/content/drive")
+    CACHE = "/content/drive/MyDrive/chart_patterns_images.npz"
+else:
+    CACHE = "/content/chart_patterns_images.npz"
+np.savez(CACHE, X=X, Y=Y, T=T.values.astype("datetime64[ns]").astype(np.int64))
+print(f"cached {len(X):,} images -> {CACHE} ({os.path.getsize(CACHE)/1e6:.0f} MB)")
+print("On a later run, execute the loader below INSTEAD of the build cell.")"""))
+cells.append(CO("""# LOADER -- run this instead of the build cell if a cache exists
+import os
+if os.path.exists(CACHE):
+    _z = np.load(CACHE)
+    X, Y, T = _z["X"], _z["Y"], pd.to_datetime(_z["T"])
+    print(f"loaded {len(X):,} cached images")
+else:
+    print("no cache found; run the build cell")"""))
+
 cells.append(MD("""## 5. Split and train
 
 Chronological split -- no shuffling across time."""))
@@ -189,32 +214,54 @@ torch.manual_seed(0)
 m = CNN().to(dev)
 print(f"{sum(p.numel() for p in m.parameters()):,} parameters")"""))
 
-cells.append(CO("""opt = torch.optim.Adam(m.parameters(), lr=1e-5)
-lossf = nn.CrossEntropyLoss()
-dl_tr = torch.utils.data.DataLoader(DS(X[tr], Y[tr]), batch_size=128, shuffle=True,
-                                    num_workers=2, drop_last=True)
-dl_va = torch.utils.data.DataLoader(DS(X[va], Y[va]), batch_size=512, num_workers=2)
+cells.append(CO("""# fp32 on a T4 is ~21 min/epoch over 899k images -- 7 hours for 20 epochs,
+# past Colab's idle timeout.  AMP uses the tensor cores (~4x); SUBSAMPLE trades
+# training data for wall-clock.  Set SUBSAMPLE=None for the full set once the
+# pipeline is known to work end to end.
+#     300k + AMP   ~1.8 min/epoch ->  36 min for 20 epochs
+#     899k + AMP   ~5.3 min/epoch -> 1.8 h
+SUBSAMPLE = 300_000
+EPOCHS, PATIENCE, BS = 20, 3, 256
 
-best, bad, EPOCHS, PATIENCE = 1e9, 0, 20, 3
+rng = np.random.default_rng(0)
+itr = np.where(tr)[0]
+if SUBSAMPLE and len(itr) > SUBSAMPLE:
+    itr = rng.choice(itr, SUBSAMPLE, replace=False)
+print(f"training on {len(itr):,} of {tr.sum():,} train images, batch {BS}")
+
+opt = torch.optim.Adam(m.parameters(), lr=1e-5)
+lossf = nn.CrossEntropyLoss()
+scaler = torch.amp.GradScaler("cuda", enabled=(dev == "cuda"))
+dl_tr = torch.utils.data.DataLoader(DS(X[itr], Y[itr]), batch_size=BS, shuffle=True,
+                                    num_workers=2, drop_last=True, pin_memory=True)
+dl_va = torch.utils.data.DataLoader(DS(X[va], Y[va]), batch_size=1024,
+                                    num_workers=2, pin_memory=True)
+
+import time
+best, bad = 1e9, 0
 for ep in range(EPOCHS):
-    m.train()
+    t0 = time.time(); m.train()
     for xb, yb in dl_tr:
-        xb, yb = xb.to(dev), yb.to(dev)
-        opt.zero_grad(); loss = lossf(m(xb), yb); loss.backward(); opt.step()
+        xb, yb = xb.to(dev, non_blocking=True), yb.to(dev, non_blocking=True)
+        opt.zero_grad(set_to_none=True)
+        with torch.amp.autocast("cuda", enabled=(dev == "cuda")):
+            loss = lossf(m(xb), yb)
+        scaler.scale(loss).backward(); scaler.step(opt); scaler.update()
     m.eval(); vl = n = 0
-    with torch.no_grad():
+    with torch.no_grad(), torch.amp.autocast("cuda", enabled=(dev == "cuda")):
         for xb, yb in dl_va:
-            xb, yb = xb.to(dev), yb.to(dev)
+            xb, yb = xb.to(dev, non_blocking=True), yb.to(dev, non_blocking=True)
             vl += lossf(m(xb), yb).item() * len(yb); n += len(yb)
     vl /= n
-    print(f"epoch {ep+1:2d}  val loss {vl:.5f}" + ("  *" if vl < best else ""), flush=True)
+    print(f"epoch {ep+1:2d}  val loss {vl:.5f}  ({time.time()-t0:.0f}s)"
+          + ("  *" if vl < best else ""), flush=True)
     if vl < best:
-        best, bad = vl, 0
-        torch.save(m.state_dict(), "best.pt")
+        best, bad = vl, 0; torch.save(m.state_dict(), "best.pt")
     else:
         bad += 1
         if bad >= PATIENCE: print("early stop"); break
-m.load_state_dict(torch.load("best.pt")); m.eval()"""))
+m.load_state_dict(torch.load("best.pt")); m.eval()
+print(f"best val loss {best:.5f}")"""))
 
 cells.append(MD("""## 6. Does the instrument work? (test-set check)
 
