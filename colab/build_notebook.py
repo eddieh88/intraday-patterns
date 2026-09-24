@@ -132,9 +132,18 @@ C.append(MD("""## 4. Build the panel of images
 are ~95% redundant. Striding the train/val set by 3 removes most of that
 duplication at negligible information cost, and cuts training time threefold.
 The test set is strided by 5 for the same reason."""))
-C.append(CO("""SPLIT      = "2016-01-01"     # JKX mirror: early years train/val, rest test
-STRIDE_TRV = 3
+C.append(CO("""# ---- CONFIG ----------------------------------------------------------
+# A first run used stride 3 over 6 years with JKX's lr of 1e-5 and patience 2.
+# It stopped mid-descent at val 0.69642, ABOVE the base-rate floor, so the model
+# never learned even the unconditional frequency and its AUC of 0.504 said
+# nothing about chart patterns.  Two causes were mine:
+#   * lr 1e-5 is JKX's value for batch 128; at batch 256 it is halved again
+#   * patience 2 with no min_delta treated a 7e-5 wobble as a plateau
+# and one is scale: 862k parameters against ~174k images (JKX had millions).
+SPLIT      = "2018-01-01"    # 8 train/val years, matching JKX's 8
+STRIDE_TRV = 2               # ~347k train images, ~3.3 min/epoch
 STRIDE_TE  = 5
+# raise to STRIDE_TRV=1 (2x data, 2x time) if the instrument still underfits
 
 def windows(g, stride):
     o,h,l,c,v = (g[k].values.astype(np.float64)
@@ -234,10 +243,22 @@ C.append(MD("""## 6. Train
 
 Mixed precision — fp32 on a T4 is ~21 min/epoch over the full panel, which would
 exceed Colab's idle timeout before early stopping fires. Patience 2, as in JKX."""))
-C.append(CO("""EPOCHS, PATIENCE, BS = 20, 2, 256
-opt = torch.optim.Adam(m.parameters(), lr=1e-5)
+C.append(CO("""pu = Y[i_tr].mean()
+BASE = -(pu*np.log(pu) + (1-pu)*np.log(1-pu))
+print(f"base-rate-only loss = {BASE:.5f}  <- must beat this to have learned anything\\n")
+
+EPOCHS, PATIENCE, BS, LR, MIN_DELTA = 30, 5, 256, 1e-4, 1e-4
+opt = torch.optim.Adam(m.parameters(), lr=LR)
 lossf = nn.CrossEntropyLoss()
-scaler = torch.amp.GradScaler("cuda", enabled=(dev=="cuda"))
+# torch.amp.* is the current API; fall back for older builds
+try:
+    _GS = lambda: torch.amp.GradScaler("cuda", enabled=(dev=="cuda"))
+    _AC = lambda: torch.amp.autocast("cuda", enabled=(dev=="cuda"))
+    _GS()
+except (AttributeError, TypeError):
+    _GS = lambda: torch.cuda.amp.GradScaler(enabled=(dev=="cuda"))
+    _AC = lambda: torch.cuda.amp.autocast(enabled=(dev=="cuda"))
+scaler = _GS()
 dl_tr = torch.utils.data.DataLoader(DS(X[i_tr],Y[i_tr],MU,SD), batch_size=BS,
                                     shuffle=True, num_workers=2, drop_last=True, pin_memory=True)
 dl_va = torch.utils.data.DataLoader(DS(X[i_va],Y[i_va],MU,SD), batch_size=1024,
@@ -248,27 +269,31 @@ for ep in range(EPOCHS):
     for xb,yb in dl_tr:
         xb,yb = xb.to(dev,non_blocking=True), yb.to(dev,non_blocking=True)
         opt.zero_grad(set_to_none=True)
-        with torch.amp.autocast("cuda", enabled=(dev=="cuda")): loss = lossf(m(xb), yb)
+        with _AC(): loss = lossf(m(xb), yb)
         scaler.scale(loss).backward(); scaler.step(opt); scaler.update()
     m.eval(); vl = n = 0
-    with torch.no_grad(), torch.amp.autocast("cuda", enabled=(dev=="cuda")):
+    with torch.no_grad(), _AC():
         for xb,yb in dl_va:
             xb,yb = xb.to(dev,non_blocking=True), yb.to(dev,non_blocking=True)
             vl += lossf(m(xb),yb).item()*len(yb); n += len(yb)
     vl /= n
-    print(f"epoch {ep+1:2d}  val loss {vl:.5f}  ({time.time()-t0:.0f}s)"+("  *" if vl<best else ""), flush=True)
-    if vl < best: best, bad = vl, 0; torch.save(m.state_dict(), "best.pt")
+    better = vl < best - MIN_DELTA
+    print(f"epoch {ep+1:2d}  val {vl:.5f}  ({'BELOW' if vl<BASE else 'above'} base "
+          f"{BASE:.5f})  ({time.time()-t0:.0f}s)" + ("  *" if better else ""), flush=True)
+    if better: best, bad = vl, 0; torch.save(m.state_dict(), "best.pt")
     else:
         bad += 1
         if bad >= PATIENCE: print("early stop"); break
-m.load_state_dict(torch.load("best.pt")); m.eval(); print(f"best val loss {best:.5f}")"""))
+m.load_state_dict(torch.load("best.pt")); m.eval()
+print(f"\\nbest val loss {best:.5f}  |  base-rate floor {BASE:.5f}")
+print("INSTRUMENT LEARNED SOMETHING" if best < BASE else "INSTRUMENT FAILED")"""))
 
 C.append(MD("""## 7. Is the instrument any good? (strictly out of sample)"""))
 C.append(CO("""def predict_packed(Xp, bs=2048):
     out = []
     dl = torch.utils.data.DataLoader(DS(Xp, np.zeros(len(Xp),dtype=np.int64), MU, SD),
                                      batch_size=bs, num_workers=2, pin_memory=True)
-    with torch.no_grad(), torch.amp.autocast("cuda", enabled=(dev=="cuda")):
+    with torch.no_grad(), _AC():
         for xb,_ in dl: out.append(torch.softmax(m(xb.to(dev)).float(),1)[:,1].cpu().numpy())
     return np.concatenate(out)
 
@@ -278,9 +303,22 @@ auc = (stats.rankdata(p_te)[y_te==1].sum() - n1*(n1+1)/2)/(n1*n0)
 print(f"test accuracy {((p_te>0.5)==(y_te==1)).mean():.4f}  (base {max(y_te.mean(),1-y_te.mean()):.4f})")
 print(f"test AUC      {auc:.4f}")
 print(f"corr(pred, up) {np.corrcoef(p_te, y_te)[0,1]:+.4f}")
-if auc < 0.51:
-    print("\\nWARNING: the CNN barely beats chance out of sample.  A weak instrument")
-    print("cannot distinguish 'patterns carry nothing' from 'model learned nothing'.")"""))
+# Two independent gates, both required.  A fixed AUC threshold like 0.51 is
+# arbitrary and passes on noise in a small test set, so scale it: under the
+# null, SE(AUC) = sqrt((n1+n0+1)/(12*n1*n0)) (Hanley-McNeil), and we require
+# three of those above 0.5.
+SE_AUC  = np.sqrt((n1+n0+1)/(12.0*n1*n0))
+AUC_MIN = 0.5 + 3*SE_AUC
+g1 = best < BASE          # training beat the base-rate-only loss
+g2 = auc >= AUC_MIN       # and it generalises out of sample
+print(f"\\n  val loss {best:.5f} vs base-rate floor {BASE:.5f}   -> {'PASS' if g1 else 'FAIL'}")
+print(f"  AUC {auc:.4f} vs {AUC_MIN:.4f} (=0.5+3SE, SE={SE_AUC:.4f})   -> {'PASS' if g2 else 'FAIL'}")
+if not (g1 and g2):
+    print("\\nSTOP.  The instrument cannot distinguish 'patterns carry nothing' from")
+    print("'model learned nothing'.  Raise training data: STRIDE_TRV = 1, rebuild,")
+    print("retrain.  Do not interpret the probe below.")
+assert g1 and g2, "instrument too weak -- probe would be uninterpretable"
+print("\\nInstrument gates PASSED -- the probe below is interpretable.")"""))
 
 C.append(MD("""## 8. THE CONTROL — Brownian motion must return ~50%
 
