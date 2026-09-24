@@ -46,6 +46,15 @@ import matplotlib.pyplot as plt
 from scipy import stats
 dev = "cuda" if torch.cuda.is_available() else "cpu"
 print("torch", torch.__version__, "| device:", dev)
+
+# torch.amp.* is the current API; fall back for older builds
+try:
+    torch.amp.GradScaler("cuda", enabled=False)
+    _GS = lambda: torch.amp.GradScaler("cuda", enabled=(dev=="cuda"))
+    _AC = lambda: torch.amp.autocast("cuda", enabled=(dev=="cuda"))
+except (AttributeError, TypeError):
+    _GS = lambda: torch.cuda.amp.GradScaler(enabled=(dev=="cuda"))
+    _AC = lambda: torch.cuda.amp.autocast(enabled=(dev=="cuda"))
 if dev == "cpu": print("WARNING: no GPU. Runtime > Change runtime type > T4 GPU.")"""))
 
 C.append(MD("""## 2. Data
@@ -179,19 +188,30 @@ print(f"\\n{len(X):,} images in {time.time()-t0:.0f}s | packed {X.nbytes/1e6:.0f
       f"(unpacked would be {len(X)*H*W/1e9:.1f} GB)")
 print(f"base rate P(up) = {Y.mean():.4f}")"""))
 
-C.append(MD("## 4b. Cache — so a disconnect does not cost the rebuild"))
-C.append(CO("""USE_DRIVE = False
-if USE_DRIVE:
-    from google.colab import drive; drive.mount("/content/drive")
-    CACHE = "/content/drive/MyDrive/chart_patterns_images.npz"
-else:
-    CACHE = "/content/chart_patterns_images.npz"
+C.append(MD("""## 4b. Cache to Drive
+
+Colab free tier disconnects, and `/content` does not survive it. Drive does.
+The first write of ~800 MB takes a few minutes; it is the difference between
+losing two minutes and losing the whole run."""))
+C.append(CO("""from google.colab import drive
+drive.mount("/content/drive")
+CACHE = "/content/drive/MyDrive/chart_patterns_images.npz"
+CKPT  = "/content/drive/MyDrive/chart_patterns_ckpt.pt"
+BEST  = "/content/drive/MyDrive/chart_patterns_best.pt"
 np.savez(CACHE, X=X, Y=Y, T=T.values.astype("datetime64[ns]").astype(np.int64))
-print(f"cached -> {CACHE} ({os.path.getsize(CACHE)/1e6:.0f} MB)")
+print(f"cached -> {CACHE} ({os.path.getsize(CACHE)/1e6:.0f} MB)")"""))
+C.append(MD("""### After a restart, run THIS instead of cells 2-4
 
-# On a later run, execute THIS instead of the build cell:
-#   _z = np.load(CACHE); X, Y, T = _z["X"], _z["Y"], pd.to_datetime(_z["T"])"""))
-
+Skips the upload and the rebuild. You still need `df` for the volume pool in
+the probe, so re-upload the parquet with the commented line."""))
+C.append(CO("""from google.colab import drive
+drive.mount("/content/drive")
+CACHE = "/content/drive/MyDrive/chart_patterns_images.npz"
+CKPT  = "/content/drive/MyDrive/chart_patterns_ckpt.pt"
+BEST  = "/content/drive/MyDrive/chart_patterns_best.pt"
+_z = np.load(CACHE); X, Y, T = _z["X"], _z["Y"], pd.to_datetime(_z["T"])
+print(f"loaded {len(X):,} cached images")
+# from google.colab import files; df = pd.read_parquet(next(iter(files.upload())))"""))
 C.append(MD("""## 5. Split and model
 
 JKX split train/validation **randomly** within the early period, explicitly to
@@ -239,32 +259,36 @@ for p_ in m.parameters():
     if p_.dim() > 1: nn.init.xavier_uniform_(p_)          # JKX: Xavier
 print(f"{sum(p.numel() for p in m.parameters()):,} parameters")"""))
 
-C.append(MD("""## 6. Train
+C.append(MD("""## 6. Train — resumable
 
 Mixed precision — fp32 on a T4 is ~21 min/epoch over the full panel, which would
 exceed Colab's idle timeout before early stopping fires. Patience 2, as in JKX."""))
 C.append(CO("""pu = Y[i_tr].mean()
 BASE = -(pu*np.log(pu) + (1-pu)*np.log(1-pu))
-print(f"base-rate-only loss = {BASE:.5f}  <- must beat this to have learned anything\\n")
 
-EPOCHS, PATIENCE, BS, LR, MIN_DELTA = 30, 5, 256, 1e-4, 1e-4
+# lr: JKX use 1e-5 at batch 128, so 2e-5 at batch 256 by linear scaling.  A run
+# at 1e-4 oscillated (0.7026 -> 0.7070 -> 0.7028, no trend) while 1e-5 descended
+# cleanly at -0.014/epoch.  The original failure was the STOPPING RULE --
+# patience 2 with no min_delta -- not the learning rate.
+EPOCHS, PATIENCE, BS, LR, MIN_DELTA = 30, 5, 256, 2e-5, 1e-4
+
 opt = torch.optim.Adam(m.parameters(), lr=LR)
-lossf = nn.CrossEntropyLoss()
-# torch.amp.* is the current API; fall back for older builds
-try:
-    _GS = lambda: torch.amp.GradScaler("cuda", enabled=(dev=="cuda"))
-    _AC = lambda: torch.amp.autocast("cuda", enabled=(dev=="cuda"))
-    _GS()
-except (AttributeError, TypeError):
-    _GS = lambda: torch.cuda.amp.GradScaler(enabled=(dev=="cuda"))
-    _AC = lambda: torch.cuda.amp.autocast(enabled=(dev=="cuda"))
-scaler = _GS()
+lossf = nn.CrossEntropyLoss(); scaler = _GS()
+start, hist, best, bad = 0, [], 1e9, 0
+if os.path.exists(CKPT):                      # resume after a disconnect
+    ck = torch.load(CKPT, map_location=dev)
+    m.load_state_dict(ck["model"]); opt.load_state_dict(ck["opt"])
+    scaler.load_state_dict(ck["scaler"])
+    start, hist, best, bad = ck["epoch"], ck["hist"], ck["best"], ck["bad"]
+    print(f"RESUMED from epoch {start}, best val {best:.5f}")
+else:
+    print(f"fresh start | base-rate-only loss {BASE:.5f} <- must beat this")
+
 dl_tr = torch.utils.data.DataLoader(DS(X[i_tr],Y[i_tr],MU,SD), batch_size=BS,
                                     shuffle=True, num_workers=2, drop_last=True, pin_memory=True)
 dl_va = torch.utils.data.DataLoader(DS(X[i_va],Y[i_va],MU,SD), batch_size=1024,
                                     num_workers=2, pin_memory=True)
-best, bad = 1e9, 0
-for ep in range(EPOCHS):
+for ep in range(start, EPOCHS):
     t0 = time.time(); m.train()
     for xb,yb in dl_tr:
         xb,yb = xb.to(dev,non_blocking=True), yb.to(dev,non_blocking=True)
@@ -276,17 +300,19 @@ for ep in range(EPOCHS):
         for xb,yb in dl_va:
             xb,yb = xb.to(dev,non_blocking=True), yb.to(dev,non_blocking=True)
             vl += lossf(m(xb),yb).item()*len(yb); n += len(yb)
-    vl /= n
+    vl /= n; hist.append(vl)
     better = vl < best - MIN_DELTA
+    if better: best, bad = vl, 0; torch.save(m.state_dict(), BEST)
+    else: bad += 1
+    d = f"  d={hist[-1]-hist[-2]:+.5f}" if len(hist) > 1 else ""
     print(f"epoch {ep+1:2d}  val {vl:.5f}  ({'BELOW' if vl<BASE else 'above'} base "
-          f"{BASE:.5f})  ({time.time()-t0:.0f}s)" + ("  *" if better else ""), flush=True)
-    if better: best, bad = vl, 0; torch.save(m.state_dict(), "best.pt")
-    else:
-        bad += 1
-        if bad >= PATIENCE: print("early stop"); break
-m.load_state_dict(torch.load("best.pt")); m.eval()
-print(f"\\nbest val loss {best:.5f}  |  base-rate floor {BASE:.5f}")
-print("INSTRUMENT LEARNED SOMETHING" if best < BASE else "INSTRUMENT FAILED")"""))
+          f"{BASE:.5f}){d}  ({time.time()-t0:.0f}s)" + ("  *" if better else ""), flush=True)
+    torch.save({"model":m.state_dict(),"opt":opt.state_dict(),"scaler":scaler.state_dict(),
+                "epoch":ep+1,"hist":hist,"best":best,"bad":bad}, CKPT)
+    if bad >= PATIENCE: print("early stop"); break
+m.load_state_dict(torch.load(BEST)); m.eval()
+print(f"\\nbest val {best:.5f} | base-rate floor {BASE:.5f}")
+print("LEARNED SOMETHING" if best < BASE else "FAILED -- did not beat the base rate")"""))
 
 C.append(MD("""## 7. Is the instrument any good? (strictly out of sample)"""))
 C.append(CO("""def predict_packed(Xp, bs=2048):
