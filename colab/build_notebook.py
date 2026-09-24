@@ -378,13 +378,19 @@ def probe(path_fn, n=10000, seed=0):
     return predict_packed(images_from_paths(path_fn(rng, n), rng))
 
 brown = probe(lambda r,n: np.cumprod(1 + r.normal(0, SIGMA, (n, 2*NDAYS)), axis=1))
-t_, p_ = stats.ttest_1samp(brown, 0.5)
-print(f"\\nBrownian control: mean P(up) = {brown.mean():.4f} (sd {brown.std():.4f})")
-print(f"  vs 0.50 -> t = {t_:+.2f}, p = {p_:.3g}")
-OK = abs(brown.mean()-0.5) < 0.03
-print("\\nPLACEBO " + ("PASSED - instrument usable" if OK else
-      "FAILED - the CNN is biased; nothing below is interpretable"))
-assert OK, "placebo failed - do not interpret what follows"
+# JKX get ~0.50 on random images because THEIR labels are ~50/50 -- they say so
+# explicitly.  Ours are not: the training base rate is ~0.526 (2010-2017 was a
+# bull market in 492 large-cap survivors).  A calibrated model fed uninformative
+# input should return the PRIOR, not 0.50.  Testing against 0.50 fails a model
+# that is behaving correctly.
+gap = brown.mean() - pu
+print(f"\\ntraining base rate    = {pu:.4f}")
+print(f"Brownian control mean = {brown.mean():.4f}  (sd {brown.std():.4f})")
+print(f"difference from prior = {gap:+.4f}")
+OK = abs(gap) < 0.03
+print("\\nPLACEBO " + ("PASSED - control sits at the prior, as it should" if OK
+                      else "FAILED - control far from the prior; model miscalibrated"))
+assert OK, f"control {brown.mean():.4f} vs prior {pu:.4f} - miscalibrated"
 """))
 
 C.append(MD("""## 9. The 23 textbook patterns
