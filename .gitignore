@@ -18,3 +18,7 @@ dlsa_real/
 *.npy
 
 *.log
+
+# model checkpoints and OS cruft
+*.pt
+.DS_Store
