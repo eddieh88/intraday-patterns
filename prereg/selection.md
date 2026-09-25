@@ -222,3 +222,36 @@ press releases, recorded here before use.
 **7. Win rate is not reported as meaningful.** With a 131bp median risk unit, a
 +2R target is rarely reached by 11:00, so most trades exit on time. The signed
 continuation target already measures that exit.
+
+### Amendment 2 — 2026-09-25, features built, no outcome computed
+
+Implementation choices the registration left open, fixed here before any target
+or trade result exists.
+
+- **Body ratio is dropped.** |close − open| / (high − low) over the window is the
+  signal size by construction, since 1R is the window's high − low.
+- **Room to the next level** is capped at 10R when no level lies ahead, and is
+  missing when none of the four levels is known.
+- **Minimum history:** ATR14 10 sessions, ATR100 50, 20-day means 10, 60-day beta
+  and sector correlation 40, SPY 20-day volatility 15.
+- **Sector ETF:** the highest correlation of daily close-to-close returns over the
+  prior 60 sessions, among the twelve listed.
+- **The window is exact.** Window fields are missing unless all three bars
+  (09:30, 09:35, 09:40) exist.
+- **Early closes are detected, not listed.** On a session where under 20% of the
+  09:30–16:00 volume trades after 13:00, the session ends at 13:00; otherwise
+  after-hours prints enter the day's close and range. Every half day in 2021–26
+  sits at ≤ 0.13 and every full day at ≥ 0.34. Only end-of-day fields, which are
+  used lagged, depend on this.
+- **Complete cases.** 93.5% of the 104,902 development name-days have every
+  feature. Step 3 uses complete cases only and reports how many were dropped.
+
+**The audit** (`selection/test_audit.py`) passes, and must pass before step 3:
+
+| check | result |
+|---|---|
+| bar convention, including a known half day | pass |
+| scrambling every bar from 09:45 on leaves all same-day fields unchanged | pass, 3 sessions |
+| replacing a day's end-of-day fields and all later data with noise leaves that day's features unchanged | pass, 6 dates |
+| **the audit can fail:** removing one `.shift(1)` is caught | caught on 6/6 dates, 6 features flagged |
+| holdout sealed | last date 2025-03-31 |

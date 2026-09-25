@@ -428,3 +428,7 @@ rather than R, but they were measured on the hindsight pool.
 14. **E1–E13 used a hindsight-selected universe** (see the correction above).
    E17 and E18 were rerun on the point-in-time universe and did not change; the
    earlier experiments were not.
+15. **Early-close sessions are treated as full days in E1–E18.** On ten half
+   days in 2021–26 the 09:30–16:00 filter counts after-hours prints as the
+   session. Found while building the selection study, which handles them; the
+   earlier experiments were not rerun for 10 of 1,435 sessions.
