@@ -66,3 +66,44 @@ spans 648 of 689 sessions, so it is not a handful of days.
 
 **Registered reading: nothing → stop.** Ridge ends here. A pre-specified
 nonlinear model is added below by amendment, at a stricter bar.
+
+## Amendment 4 — LightGBM, fixed settings, bar 2.24: FAIL, both gates
+
+**Step 3 form:**
+
+| target | out-of-sample R² | Spearman | slope t |
+|---|---|---|---|
+| signed continuation `y` | −0.0000 | −0.011 | +0.08 |
+| efficiency ratio | −0.0010 | −0.015 | −1.08 |
+
+Early stopping, on each training set's own last six months, chose **1 to 9 trees
+in most folds** against a cap of 2,000 — 75 and 233 in one fold each. The model
+found nothing it could learn. What little it fitted leaned on session-wide
+features (share of split gain for `y`: SPY alignment 54%, breadth 28%, SPY
+volatility 7%), so its rankings mostly sort *days*, not names. The faint
+trend-day signal ridge found does not survive (Spearman −0.015 against +0.021).
+
+**Step 4 form:**
+
+| gate | top fifth, cost (a) | cost (b) | top − bottom t (a / b) |
+|---|---|---|---|
+| pooled | −0.042 [−0.094, +0.010] | −0.034 [−0.086, +0.018] | −1.26 / −1.18 |
+| within-session | −0.042 [−0.071, −0.014] | −0.030 [−0.059, −0.002] | −1.24 / −0.93 |
+
+The best fifth is *worse* than the worst fifth. The pooled top fifth sits in
+264 of 689 sessions — it is selecting days.
+
+## Conclusion
+
+**No.** Out of sample over 689 sessions, nothing visible at 09:45 — catalyst,
+opening activity, market alignment, location, regime or calendar — identifies
+the mornings on which a momentum entry pays after costs. Neither a linear model
+nor a pre-specified nonlinear one ranks mornings better than chance, and the
+momentum entry itself earns about +0.01R gross against 0.023–0.03R of cost.
+
+This closes the study as registered. **The holdout (2025-04-01 onward) stays
+sealed** — nothing here earned a look at it, so it remains clean for a future
+question.
+
+Deferred, as recorded in Amendment 3: CPI and NFP days, and earnings. They
+would need their own registration, and the forward period as their clean test.

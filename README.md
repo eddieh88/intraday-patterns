@@ -121,6 +121,24 @@ equal on every single trade, because an upward break of the opening range *is*
 price going up — the two rules always pick the same side. **The opening range
 breakout is a momentum rule with a line drawn on the chart.**
 
+### 7. Can anything at 09:45 pick the good mornings?
+
+If direction is just momentum, the useful question is *when* momentum pays. So
+we took the plainest possible trade — at 09:45, go with the first fifteen
+minutes; exit by 11:00 — and asked whether about 25 things visible at 09:45
+(the gap, pre-market and opening volume, whether SPY and the sector agree, room
+to the next level, volatility regime, FOMC and other calendar days) could pick
+out the mornings where it works.
+
+It was registered in advance, tested only on months the model had never seen,
+and a hidden final period was sealed in code.
+
+**They can't.** Out of sample the predictions ranked mornings no better than a
+coin — a rank correlation of 0.003. A more flexible model (LightGBM) did no
+better; it chose to stop after one to nine trees, having found nothing to learn.
+The best-rated fifth of mornings lost money after costs under both models.
+Details in [selection/RESULTS.md](selection/RESULTS.md).
+
 ## One pattern claim did check out
 
 **Fair value gaps fill at roughly the rates people say they do.**
@@ -157,6 +175,7 @@ artificial penalty — the comparison between them is what counts.
 | [experiments/](experiments/) | One script per claim, with an index mapping each to its result |
 | [note/open-tests.html](note/) | The same story written for an experienced day trader, definitions first |
 | [figures/](figures/) | Charts per experiment, and rendered examples of what the detector found |
+| [selection/](selection/) | The 09:45 selection study: features, leak audit, results |
 | [prereg/](prereg/) | Rules written before the tests — one (inverse fair value gaps) not yet run |
 | [lib/](lib/), [data/](data/), [render/](render/), [diagnostics/](diagnostics/) | Shared code, data download, chart rendering, one-off checks — each with its own README |
 
