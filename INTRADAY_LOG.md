@@ -1,4 +1,4 @@
-# Intraday experiments E1-E7 — what was claimed, how it was measured
+# Intraday experiments E1-E18 — what was claimed, how it was measured
 
 Data: MarketParquet `stock_5min`, 2021-01-04 .. 2026-09-21, 1,462 sessions,
 04:00-20:00 ET. Derived tables in `cache/`.
@@ -181,6 +181,137 @@ present is below our detection threshold and below realistic costs.*
 
 **Supersedes E10, E10b, E10c and E10d.**
 
+## E15-E18 — the estimand problem, and the benchmark that closed it
+
+E10e left a long-short spread that reviewers correctly said was not an edge.
+Four experiments were needed to get to a statistic that means what we wanted.
+
+### The estimand
+
+`L - S = 2d` measures DRIFT.  `(L + S)/2 = e` measures EDGE.  Every number
+before E16 reported the first while describing the second.
+
+Worse, both natural weightings of "signal vs random" are biased, in opposite
+directions, by `n` = signals per side per session — which is not known until
+11:00 and so is not a tradable weight either way:
+
+```
+estimand                     excess    bias
+trade-weighted vs random     +0.011    UP    over-weights the majority side,
+                                             which is the side the day rewarded
+                                             (corr(tilt, move) = +0.351, p=2e-42)
+side-balanced vs random      -0.012    DOWN  gives the minority side equal
+                                             weight; on a trend day those are
+                                             counter-trend signals that lose
+```
+
+### E16 / E16b — matched placebo
+
+Each signal is paired with a random bar in the **same name, session, side, time
+neighbourhood** (E16b adds: **same risk unit**), drawn **at or after** the
+signal.  Equal weight per pair, so `n` cancels.
+
+The after-only rule is error 09: placebos drawn up to 12 bars *before* the
+signal enter ahead of the breakout and capture the move that defines it.  Those
+earn **+0.67R** against the signal's -0.08R.
+
+Because the placebo inherits the side, the paired difference holds direction
+fixed — it measures **timing**, not direction.
+
+### E17 — direction and timing separated
+
+Direction needs the signal's **absolute gross R**, since a random-side entry has
+zero expected gross R.  479,659 matched pairs, gross:
+
+```
+                DIRECTION                TIMING (signal - delayed same side)
+entry          abs gross R      t        diff       t         n
+pullback           +0.0213   +2.73     +0.0098   +1.91   252,952
+ORB                +0.0198   +1.53     +0.0006   +0.08    46,818
+VWAP               +0.0152   +2.15     -0.0019   -0.48   151,616
+level              +0.0075   +0.68     +0.0076   +1.09    28,273
+```
+
+Direction is positive; **timing adds nothing**.  Four entries tested, so at
+Bonferroni alpha = 0.05/4 the critical |t| is 2.50: **pullback clears it, VWAP
+does not.**
+
+Stop-first and target-first tie-breaks give identical results to four decimals.
+`diagnostics/barrier_span_count.py` explains why: **35 of 639,329** resolved
+trades have one bar containing both barriers, 0.005%.
+
+### E18 — the momentum benchmark (the decisive result)
+
+Same bar, same stop, same 3R target — but side = **sign of the past k bars**.
+No level, no break, no retest.  If the pattern does work, it must beat this.
+
+```
+entry      pattern   mom k=3   mom k=6   mom k=12   pattern-mom6       t
+pullback   +0.0210   +0.0095   +0.0183   +0.0214        +0.0057   +0.90
+ORB        +0.0198   +0.0198   +0.0198   +0.0346        +0.0000     n/a
+VWAP       +0.0148   +0.0127   +0.0215   +0.0183        -0.0029   -0.59
+level      +0.0086   +0.0060   +0.0084   +0.0278        +0.0040   +0.33
+```
+
+**No entry beats it.**  The 1-2bp is generic opening continuation, not anything
+specific to the pattern.
+
+**ORB's zero is exact and its t is undefined** because the difference is
+identically zero on every trade: an upward opening-range break *is* a positive
+sign of the recent move, so the momentum rule selects the same side every time.
+**ORB is a momentum rule with a level drawn on top of it.**
+
+### The ORB reconciliation — first hypothesis was wrong
+
+Two internal ORB numbers disagreed in sign: -0.0700 and +0.0198.
+
+E18(a) hypothesised candidate-count weighting.  **That was refuted by its own
+test**: the reweighting moves ORB by 0.005R and corr(n candidates, signal R) is
+-0.014.  `diagnostics/orb_reconcile.py` found the real cause by toggling each
+difference one at a time:
+
+```
+long only, 1bp cost, every 10th session    -0.0683
++ drop the cost charge                     -0.0534   (+0.015)
++ include the downside break, not just up  +0.0441   (+0.098)  <- the gap
++ every 2nd session, not every 10th        +0.0173   (-0.027)  within noise
+```
+
+The diagnostic traded **long breaks only**, net of 1bp, on a tenth of the
+sample.  Almost the whole sign flip is the missing short side.
+
+`diagnostics/orb_clustered_se.py`, SEs clustered by session (713 sessions):
+
+```
+arm                       R    clust SE       t          n
+long only  @0bp     +0.0142      0.0214   +0.66     27,000
+short only @0bp     +0.0202      0.0250   +0.81     27,324
+both sides @0bp     +0.0172      0.0136   +1.26     54,324
+both sides @1bp     +0.0029      0.0136   +0.21     54,324
+```
+
+**ORB was never significant in either direction.**  The two numbers disagreed by
+0.09 on a quantity whose standard error is 0.014-0.021.  A diagnostic must carry
+its own specification with it or it cannot be compared to anything.
+
+### Selection does not rescue it
+
+Relvol split under the matched-placebo design, **pooling all four entries**:
+
+```
+condition              n    direction R        t      timing        t
+relvol < 1.5x    416,921        +0.0173    +2.30     +0.0044    +1.08
+relvol 1.5-3x     50,411        +0.0295    +2.44     +0.0112    +1.45
+relvol > 3x       12,327        +0.0103    +0.51     +0.0014    +0.10
+```
+
+Not monotonic — middle tier highest, top tier weakest on the thinnest sample.
+The two earlier claims about this split, **+0.0688** (helps) and **-0.0637**
+(hurts), were both artifacts of the biased estimand.  This proxy carries no
+ordering.
+
+**Supersedes E10e for the entry-comparison claim.**
+
 ## Limitations — all of them
 
 1. **Only E7 was pre-registered.** E1-E6 had thresholds chosen while looking at
@@ -210,3 +341,12 @@ present is below our detection threshold and below realistic costs.*
    have since been downloaded (3.2 GB and 511 MB); ES was verified
    back-adjusted, with large overnight gaps no more concentrated in roll
    windows than chance (25 observed vs 21 expected).
+11. **The entry rule was the wrong object.** E18 shows no entry beats a naive
+   momentum rule at the same bar. If the level's job is to set the RISK UNIT
+   rather than the direction, every test in this log aims at the wrong target.
+   Untested.
+12. **Bonferroni over four entries** is applied in E17; E1-E13 still carry no
+   multiple-testing correction, and the forking-paths count across the whole
+   series is far larger than four.
+13. **No news calendar.** One tested strategy says explicitly: never trade
+   during news, only after. We cannot filter on that at all.
