@@ -122,3 +122,17 @@ at `~/.market_parquest/api_key.txt`, **never in the repo** — the pre-commit
 hook in `hooks/` scans for it. Enable with `git config core.hooksPath hooks`.
 
 No market data is redistributed here; `cache/` is gitignored.
+
+## Related repositories
+
+This work started as one repository and split into three when the questions
+stopped being the same question.
+
+| repository | question | answer |
+|---|---|---|
+| [**statarb-replication**](https://github.com/eddieh88/statarb-replication) | Does *Deep Learning Statistical Arbitrage* replicate, and does it still work? | Replicates; does not survive past 2016 |
+| [**characteristic-factors**](https://github.com/eddieh88/characteristic-factors) | Do IPCA and the conditional autoencoder pay out of sample? | Ambiguous by the pre-registered rule, dead in substance |
+| [**intraday-patterns**](https://github.com/eddieh88/intraday-patterns) | Do the chart setups taught in trading education work? | No entry beats a naive momentum rule at the same bar |
+
+The shared thread is the error log: each repository records what went wrong and
+what caught it, because in this kind of work that is the part that transfers.
