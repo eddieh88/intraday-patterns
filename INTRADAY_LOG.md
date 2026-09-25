@@ -98,9 +98,33 @@ the long-minus-short spread.
 | VWAP | 87,669 | +0.009 | 87,682 | -0.016 | +0.0254 | +0.0059 | 0.451 |
 | pullback | 82,812 | +0.011 | 82,104 | -0.015 | +0.0260 | +0.0065 | 0.425 |
 
-**Drift is real and measurable: +0.0195R per long-short pair, t=3.63.** No entry
-adds anything beyond it -- every p > 0.42, before any correction. The best
-excess, +0.007R on a 0.7% risk unit, is 0.5bp of price: below one tick.
+**CORRECTION.** E10c first reported "+0.0195R, t=3.63" as a measured drift
+baseline. That t-stat treated 243,026 trades as independent. They are not:
+~174 trades share each session's market-wide move, so the effective sample is
+closer to the ~1,400 sessions than to the trade count.
+
+A dated re-run gives a weighted mean spread of **-0.0140R** -- the opposite
+sign -- with a year-to-year standard deviation of 0.070R:
+
+| year | universe ret/day | L-S spread |
+|---|---|---|
+| 2021 | -0.137% | -0.013 |
+| 2022 | +0.074% | -0.056 |
+| 2023 | +0.116% | +0.110 |
+| 2024 | +0.005% | -0.002 |
+| 2025 | -0.071% | -0.098 |
+| 2026 | +0.058% | -0.024 |
+
+t on the six yearly observations: **-0.48**. Correlation with that year's market
+return +0.498, p=0.315. With within-day correlation of only rho=0.05 the
+variance inflation factor is 9.6 and the original t of 3.63 becomes 1.17.
+
+**There is no significant drift effect.** The correct statement is: *random
+entry is indistinguishable from zero, and no structured entry is
+distinguishable from random.* The excess-over-random p-values (0.42-0.94) were
+already non-significant and clustering only moves them further from
+significance, so that conclusion is unaffected -- both arms share the same
+days, so the correlation largely cancels in the difference.
 
 In E10b the same `pullback` arm looked like +0.010R at t=2.31 and needed a
 Bonferroni correction to dismiss. That apparent edge was drift entering through
