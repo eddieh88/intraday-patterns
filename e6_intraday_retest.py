@@ -8,7 +8,7 @@ retest bar's low (min half a 5-min ATR, so it is never inside the noise), a 3R
 target, or the 16:00 close.  Cost charged at 2bp round trip.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames, find_setups, MIN_GAP, MIN_ADV, RWIN
 
 RR, COST_BP, ATR_N, ATR_MULT = 3.0, 2.0, 14, 0.5

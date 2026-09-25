@@ -6,7 +6,7 @@ so its origin is visible rather than asserted.
 """
 import pandas as pd, numpy as np, glob, sys, os, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import find_setups, MIN_GAP, MIN_ADV, RWIN
 
 NAMES={"AAPL","MSFT","NVDA","AMD","TSLA","META","AMZN","GOOGL","NFLX","JPM","COST","AVGO"}
@@ -65,6 +65,6 @@ for a,e in zip(ax.ravel(),SEL):
     a.set_xticks([]); a.tick_params(labelsize=7); a.legend(fontsize=6,loc="lower left")
 fig.suptitle("Where the level comes from and how it is acted on.  Black line = session boundary, "
              "grey dashed = 09:30, blue = the level, orange = break, black = retest entry",fontsize=11)
-plt.tight_layout(); os.makedirs("exploration/figures",exist_ok=True)
-plt.savefig("exploration/figures/twoday_context.png",dpi=120,facecolor="white")
-print("wrote exploration/figures/twoday_context.png")
+plt.tight_layout(); os.makedirs("figures",exist_ok=True)
+plt.savefig("figures/twoday_context.png",dpi=120,facecolor="white")
+print("wrote figures/twoday_context.png")

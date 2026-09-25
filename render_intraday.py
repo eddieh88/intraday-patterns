@@ -1,10 +1,10 @@
 """Render real intraday setups, so the detector can be checked by eye first.
 
-Writes exploration/figures/intraday_setups.png
+Writes figures/intraday_setups.png
 """
 import pandas as pd, numpy as np, glob, sys, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-sys.path.insert(0, "exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames, find_setups, MIN_GAP, MIN_ADV, RWIN
 
 NAMES = {"AAPL","MSFT","NVDA","AMD","TSLA","META","AMZN","SPY","QQQ","GOOGL","NFLX","JPM"}
@@ -53,6 +53,6 @@ for a, e in zip(ax.ravel(), SEL):
 fig.suptitle("Intraday prior-day-level breaks and retests.  "
              "Blue = level known before 9:30,  orange = break,  black = retest entry", fontsize=11)
 plt.tight_layout()
-import os; os.makedirs("exploration/figures", exist_ok=True)
-plt.savefig("exploration/figures/intraday_setups.png", dpi=120, facecolor="white")
-print("wrote exploration/figures/intraday_setups.png")
+import os; os.makedirs("figures", exist_ok=True)
+plt.savefig("figures/intraday_setups.png", dpi=120, facecolor="white")
+print("wrote figures/intraday_setups.png")

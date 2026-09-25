@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 
 L, TOL, MIN_TOUCH, BUF, RWIN, FWD = 60, 0.01, 3, 0.005, 10, 5
 
-df = pd.read_parquet("exploration/colab/colab_ohlcv.parquet")
+df = pd.read_parquet("colab/colab_ohlcv.parquet")
 df = df.sort_values(["symbol","timestamp"]).reset_index(drop=True)
 # market return per day = cross-sectional mean of next-FWD-day returns
 piv = df.pivot_table(index="timestamp", columns="symbol", values="close")

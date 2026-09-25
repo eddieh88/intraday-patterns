@@ -116,7 +116,7 @@ def bracket(o,h,l,c,e,stop,rr,realistic=True,cost_bp=10):
 if __name__=="__main__":
     import sys
     RR=float(sys.argv[1]) if len(sys.argv)>1 else 3.0
-    df=pd.read_parquet("exploration/colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
+    df=pd.read_parquet("colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
     piv=df.pivot_table(index="timestamp",columns="symbol",values="close")
     B={}; RISK={}
     for j,(s,g) in enumerate(df.groupby("symbol",sort=False)):

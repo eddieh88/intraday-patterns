@@ -8,7 +8,7 @@ Same entries throughout (random bar, 09:30-11:00, top 100 names), varying only:
 and for three stop widths, since cost-as-a-fraction-of-R depends on the stop.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames
 rng=np.random.default_rng(0); MAXB=60
 

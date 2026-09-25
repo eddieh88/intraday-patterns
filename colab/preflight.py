@@ -5,7 +5,7 @@ escaping error, a float64/AMP dtype mismatch, and a training loop whose
 early-stopping rule fired mid-descent.  This executes every code cell against a
 small symbol subset and asserts the things that actually broke.
 
-    python3 exploration/colab/preflight.py
+    python3 colab/preflight.py
 
 Exits non-zero on failure.  What it CANNOT catch: anything CUDA-specific (this
 machine has no CUDA, so autocast runs disabled), Drive mounting, and whether

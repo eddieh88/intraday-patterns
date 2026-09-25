@@ -9,7 +9,7 @@ import numpy as np, pandas as pd, warnings, itertools, sys
 warnings.filterwarnings("ignore")
 BASE = dict(L=60, TOL=0.01, MIN_TOUCH=3, BUF=0.005, RWIN=10, FWD=5)
 
-df = pd.read_parquet("exploration/colab/colab_ohlcv.parquet")
+df = pd.read_parquet("colab/colab_ohlcv.parquet")
 df = df.sort_values(["symbol","timestamp"]).reset_index(drop=True)
 piv = df.pivot_table(index="timestamp", columns="symbol", values="close")
 GRP = list(df.groupby("symbol", sort=False))

@@ -1,7 +1,7 @@
 """One figure per intraday experiment, from the cached tables.
 
-    python3 exploration/render_experiments.py
-    -> exploration/figures/E1..E7_*.png
+    python3 render_experiments.py
+    -> figures/E1..E7_*.png
 
 Each figure shows the measurement, the benchmark it is judged against, and the
 sample size, so the claim can be checked rather than taken on trust.
@@ -9,7 +9,7 @@ sample size, so the claim can be checked rather than taken on trust.
 import pandas as pd, numpy as np, os, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from scipy import stats
-OUT="exploration/figures"; os.makedirs(OUT, exist_ok=True)
+OUT="figures"; os.makedirs(OUT, exist_ok=True)
 plt.rcParams.update({"figure.facecolor":"white","axes.grid":True,"grid.alpha":.25,
                      "font.size":9,"axes.titlesize":10})
 D=pd.read_parquet("cache/intraday_daily.parquet")

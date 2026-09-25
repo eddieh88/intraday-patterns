@@ -19,7 +19,7 @@ Statistic throughout is the SIDE-BALANCED session-paired excess over random --
 the corrected one.  Trade-weighting conflates signal tilt with edge.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames
 MAXB=60
 

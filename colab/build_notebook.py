@@ -497,6 +497,6 @@ nothing."""))
 nb={"cells":C,"metadata":{"kernelspec":{"display_name":"Python 3","language":"python","name":"python3"},
     "language_info":{"name":"python"},"accelerator":"GPU","colab":{"provenance":[],"gpuType":"T4"}},
     "nbformat":4,"nbformat_minor":0}
-p="exploration/colab/chart_patterns_colab.ipynb"
+p="colab/chart_patterns_colab.ipynb"
 json.dump(nb, open(p,"w"), indent=1)
 print(f"wrote {p}: {len(C)} cells")

@@ -6,7 +6,7 @@ so the difference is purely the timing.
 """
 import numpy as np, pandas as pd, warnings, sys
 from scipy import stats
-warnings.filterwarnings("ignore"); sys.path.insert(0,"exploration")
+warnings.filterwarnings("ignore"); sys.path.insert(0, ".")
 from setups_v2 import (pivots, horiz_level, trendline, struct_stop,
                        K, LOOKBACK, CLUST, BUF, RWIN, MAXBARS, PAD, MIN_GAP, MIN_ADV)
 RR=3.0
@@ -19,7 +19,7 @@ def trade(o,h,l,c,e,stop,rr=RR,cost_bp=10):
         if h[i]>=tgt:   return (max(tgt,o[i])-entry-cost)/risk
     j=min(e+MAXBARS,len(c)-1); return (c[j]-entry-cost)/risk
 
-df=pd.read_parquet("exploration/colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
+df=pd.read_parquet("colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
 P={"H":[], "T":[]}
 for s,g in df.groupby("symbol",sort=False):
     o,h,l,c=(g[k].values.astype(float) for k in ("open","high","low","close"))

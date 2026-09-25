@@ -12,7 +12,7 @@ Adds, on top of the idealised version:
 """
 import numpy as np, pandas as pd, warnings, sys
 warnings.filterwarnings("ignore")
-sys.path.insert(0, "exploration")
+sys.path.insert(0, ".")
 from swing_levels import scan_trades
 
 RR, MAXBARS, PAD = 3.0, 20, 0.002
@@ -33,7 +33,7 @@ def bracket(o,h,l,c,e, realistic, cost_bp):
     j=min(e+MAXBARS, len(c)-1)
     return (c[j]-entry-cost)/risk
 
-df = pd.read_parquet("exploration/colab/colab_ohlcv.parquet")
+df = pd.read_parquet("colab/colab_ohlcv.parquet")
 df = df.sort_values(["symbol","timestamp"]).reset_index(drop=True)
 GR = list(df.groupby("symbol", sort=False))
 

@@ -1,6 +1,6 @@
 """How often does the resolving bar contain BOTH the stop and the target?"""
 import pandas as pd, numpy as np, glob, sys
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames
 MAXB=60
 def probe(o,h,l,c,e,up,risk):

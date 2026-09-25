@@ -7,7 +7,7 @@ clustering and gaps all break the martingale.  So sweep it.
 """
 import numpy as np, pandas as pd, warnings, sys
 warnings.filterwarnings("ignore")
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from swing_levels import scan_trades
 MAXBARS, PAD = 20, 0.002
 
@@ -21,7 +21,7 @@ def bracket(o,h,l,c,e,rr):
     j=min(e+MAXBARS,len(c)-1)
     return (c[j]-entry)/risk
 
-df=pd.read_parquet("exploration/colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
+df=pd.read_parquet("colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
 GR=list(df.groupby("symbol",sort=False))
 TR=[]
 for s,g in GR:

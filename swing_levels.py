@@ -86,7 +86,7 @@ def scan_trades(g):
     return out
 
 if __name__ == "__main__":
-    df = pd.read_parquet("exploration/colab/colab_ohlcv.parquet")
+    df = pd.read_parquet("colab/colab_ohlcv.parquet")
     df = df.sort_values(["symbol","timestamp"]).reset_index(drop=True)
     piv = df.pivot_table(index="timestamp", columns="symbol", values="close")
     mkt = (piv.shift(-FWD)/piv - 1.0).mean(axis=1)

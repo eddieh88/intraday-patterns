@@ -29,7 +29,7 @@ Here the placebo inherits the SIGNAL's risk in price terms.  Only the entry
 bar differs.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames
 COST_BP, MAXB, K = 1.0, 60, 12          # placebo drawn within +/-12 bars (1 hour)
 rng=np.random.default_rng(0)

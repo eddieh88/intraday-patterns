@@ -13,7 +13,7 @@ it.  That is the red zone in every textbook diagram.  Here: level minus a
 buffer of half a 5-minute ATR.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames, find_setups, MIN_GAP, MIN_ADV, RWIN
 
 RR, COST_BP, ATR_N, ATR_MULT = 3.0, 2.0, 14, 0.5

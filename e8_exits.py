@@ -15,7 +15,7 @@ Same entries throughout, so any difference is purely the exit:
 All exit at the 16:00 close if nothing else triggers.  2bp round trip.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0,"exploration")
+sys.path.insert(0, ".")
 from intraday_levels import session_frames, find_setups
 COST_BP=2.0
 

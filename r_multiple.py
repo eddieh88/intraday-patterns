@@ -13,7 +13,7 @@ still lose.
 """
 import numpy as np, pandas as pd, warnings
 warnings.filterwarnings("ignore")
-import sys; sys.path.insert(0, "exploration")
+import sys; sys.path.insert(0, ".")
 from swing_levels import scan_trades   # provided below if missing
 
 RR, MAXBARS, PAD = 3.0, 20, 0.002
@@ -38,7 +38,7 @@ def summarise(name, rs):
           f"{rs.std()/np.sqrt(len(rs)):9.3f}{exp/(rs.std()/np.sqrt(len(rs))):+8.2f}")
 
 if __name__ == "__main__":
-    df = pd.read_parquet("exploration/colab/colab_ohlcv.parquet")
+    df = pd.read_parquet("colab/colab_ohlcv.parquet")
     df = df.sort_values(["symbol","timestamp"]).reset_index(drop=True)
     buckets = {k: [] for k in ("bounce","immediate","failure","no_breakout")}
     for j,(s,g) in enumerate(df.groupby("symbol", sort=False)):

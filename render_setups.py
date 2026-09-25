@@ -4,19 +4,19 @@ Every parameter in setups_v2.py is a judgement call, and a parameter sweep
 cannot tell you whether the thing being detected is the thing a trader would
 call a break-and-retest.  Only looking at the charts can.
 
-    python3 exploration/render_setups.py            # 6 examples, mixed outcomes
-    python3 exploration/render_setups.py T 3        # 3 trendline winners
+    python3 render_setups.py            # 6 examples, mixed outcomes
+    python3 render_setups.py T 3        # 3 trendline winners
 
-Writes exploration/figures/real_setups.png
+Writes figures/real_setups.png
 """
 import numpy as np, pandas as pd, warnings, sys, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-warnings.filterwarnings("ignore"); sys.path.insert(0,"exploration")
+warnings.filterwarnings("ignore"); sys.path.insert(0, ".")
 from setups_v2 import (pivots, horiz_level, trendline, struct_stop,
                        K, LOOKBACK, CLUST, MIN_SWINGS, BUF, RWIN, MAXBARS, PAD, TL_MIN_PTS)
 RR=3.0
 
-df=pd.read_parquet("exploration/colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
+df=pd.read_parquet("colab/colab_ohlcv.parquet").sort_values(["symbol","timestamp"])
 EV=[]
 for s,g in df.groupby("symbol",sort=False):
     o,h,l,c=(g[k].values.astype(float) for k in ("open","high","low","close"))
@@ -82,7 +82,7 @@ for a,e in zip(ax.ravel(),SEL):
 fig.suptitle("Real detected setups.  Orange dotted = breakout bar,  black = entry (retest bounce),  "
              "red band = risk,  green band = 3R target",fontsize=11)
 plt.tight_layout(); import os
-os.makedirs("exploration/figures", exist_ok=True)
-OUT="exploration/figures/real_setups_v2.png"
+os.makedirs("figures", exist_ok=True)
+OUT="figures/real_setups_v2.png"
 plt.savefig(OUT,dpi=120,facecolor="white")
 print("wrote",OUT)
