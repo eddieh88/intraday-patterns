@@ -168,4 +168,57 @@ touched.
 
 ## Amendments
 
-*None.*
+### Amendment 1 — 2026-09-25, before any feature was built
+
+Prompted by review. No outcome of this design had been measured.
+
+**1. Two gates, not one.** Several features are identical for every name on a
+given morning — SPY alignment, breadth, VIXY, the calendar. A pooled ranking can
+therefore select *days* rather than *names*, which is index timing and far
+cheaper to trade in futures. Step 4 now has two gates, each with the same test
+(top-fifth net R, 95% session-clustered CI above zero, top minus bottom t > 2):
+
+- **pooled:** top fifth of all out-of-sample name-days;
+- **within-session:** top fifth of names inside each session, ranked on the
+  prediction — about 20 per day.
+
+| pooled | within-session | reading | next |
+|---|---|---|---|
+| pass | pass | stock selection | step 5 on stocks |
+| pass | fail | **index timing** | step 5 on ES/NQ; the stock holdout stays sealed |
+| fail | pass | relative selection only | step 5 as a within-day ranking rule |
+| fail | fail | nothing | **stop** |
+
+**2. Costs are charged per trade, under two models, and a gate must pass both.**
+(a) 3bp of the fill price, divided by *that trade's own* 1R — so 0.06R on a
+narrow 50bp range, 0.023R at the median. (b) A flat 0.023R per trade. Under (a) a
+wide-range day really is cheaper in R, but true spreads may also widen on those
+days, which a flat bp charge cannot see; (b) removes the link between range and
+cost entirely. Passing both means the result does not come from the cost channel.
+6bp is still reported alongside.
+
+**3. VIXY stays a return, not a level** — roll decay makes its level drift for
+years and would encode the date. VX futures levels are not used either: our
+series is back-adjusted, so its level is not the true VIX.
+
+**4. The timestamp audit asserts the bar convention itself.** Bars are stamped at
+their *start*: regular hours are 09:30–15:55, 78 bars, verified on the data. The
+audit fails if that stops holding, and fails if any feature reads a bar stamped
+09:45 or later.
+
+**5. Calendar features, now specified exactly:**
+- FOMC decision day, and the session after it — `data/calendar/fomc_decisions.csv`,
+  committed with this amendment;
+- options expiration (third Friday, or the preceding session if closed) and
+  month-end (last session of the month) — computed;
+- CPI and NFP days — **still pending**. If their file is not committed before
+  step 3, both are dropped, as the original registration says.
+
+**6. Earnings will enter by amendment before step 3**, subject to: a
+before-open / after-close flag on every event (an after-close report on day t is
+the catalyst for session t+1); and a spot-check of at least 30 dates against
+press releases, recorded here before use.
+
+**7. Win rate is not reported as meaningful.** With a 131bp median risk unit, a
++2R target is rarely reached by 11:00, so most trades exit on time. The signed
+continuation target already measures that exit.
