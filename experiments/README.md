@@ -49,7 +49,6 @@ E14 was never run.
 | file | |
 |---|---|
 | `break_retest_daily.py` | Break-and-retest on daily bars, from the CNN-imaging thread that preceded this one |
-| `prereg_tests_ab.py` | The two pre-registered intraday tests carried over from the statarb work — see [`../prereg/findings_tests_ab.md`](../prereg/findings_tests_ab.md) |
 
 ## Reading order
 

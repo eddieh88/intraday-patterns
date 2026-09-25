@@ -7,7 +7,6 @@ experiment depends on.
 |---|---|
 | `mp5_fetch.py` | 5-minute equity bars → `cache/mp5min/` — **this is the one the experiments use** |
 | `build_daily.py` | One daily summary table from that archive → `cache/intraday_daily.parquet`. Run once before any experiment. |
-| `minute_fetch.py` | 5-minute bars for the pre-registered sample days (earlier, narrower pull) |
 | `mp_etf_5min_fetch.py` | ETF 5-minute bars (3.2 GB) — **downloaded, never used in any test** |
 | `mp_futures_5min_fetch.py` | Futures 5-minute bars (511 MB, ES verified back-adjusted) — **never used** |
 | `mp_futures_1min_fetch.py` | Futures 1-minute bars (1.4 GB) — **never used** |
