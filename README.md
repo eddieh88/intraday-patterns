@@ -1,166 +1,188 @@
 # Do intraday chart patterns work?
 
-Eighteen mechanical tests of the setups taught in retail trading education —
-opening range breakouts, break-and-retest of prior-day support and resistance,
-fair value gaps, break of structure, ICT-style session logic — on **1,425
-sessions of 5-minute bars, 2021–2026, 200 names selected point-in-time.**
+YouTube and trading courses teach a common set of day-trading setups: buy the
+breakout of the opening range, wait for price to break a level and come back to
+"retest" it, trade "fair value gaps", watch for the "judas swing" at the open.
+They're taught as if they work.
 
-## The answer
+We turned each one into an exact rule and tested it on **1,425 trading days of
+5-minute bars (2021–2026)**, using each day's 100 most-traded US stocks — about
+200 different companies over the whole period.
 
-**One claim survived. It is the one nobody disputes.**
+## The short version
 
-> The opening hour really is different: its bar range is **2.94× midday**, and
-> **35% of the day's volume trades in 23% of its hours.**
+- **The opening hour really is different.** Price moves **2.94×** as much per
+  bar as at midday, and **35%** of the day's volume trades in 23% of the hours.
+  That's the one claim that held up, and nobody disputes it.
+- **The timing claims about the open failed.** The "false move" at the open
+  reverses 50.5% of the time — a coin flip. Pre-market direction predicts the
+  day 49.2% of the time. Also a coin flip.
+- **The entry setups pick the right direction slightly more often than chance**
+  — worth about **1–2 hundredths of a percent** per trade. Trading costs are
+  3–6 hundredths. So none of it is profitable.
+- **And that small edge isn't coming from the pattern.** A rule that ignores the
+  chart and just asks "has price gone up or down over the last 30 minutes?"
+  does exactly as well. The setups are a way of noticing momentum, not a source
+  of it.
 
-**Every directional claim failed, and the last test explains why.**
+## The story
 
-Four entry rules each carry a small positive directional edge — they pick the
-right side slightly more often than chance, worth **+0.7 to +1.9 bp of price,
-gross.** Realistic all-in cost is 3–6 bp, so none of it is payable. But the
-size was never the interesting part:
+### 1. Is the open special?
 
-```
-side from the pattern   vs   side from the sign of the last k bars
-(same entry bar, same stop, same 3R target, same costs)
+Every setup here is taught for the first hour or two of the trading day, so we
+checked that first. It is: bars at the open are almost three times the size of
+midday bars, and a third of the day's volume trades there. **Confirmed.**
 
-entry      pattern   mom k=6   pattern - mom6       t
-pullback   +0.0210   +0.0183          +0.0057   +0.90
-ORB        +0.0198   +0.0198          +0.0000     n/a
-VWAP       +0.0148   +0.0215          -0.0029   -0.59
-level      +0.0086   +0.0084          +0.0040   +0.33
-```
+### 2. The session-timing claims
 
-**No pattern beats a rule that ignores the chart and looks only at whether
-price has gone up or down for thirty minutes.** The edge is generic opening
-continuation. The patterns are ways of noticing it, not sources of it.
+A family of claims (much of it from "ICT" trading content) says the open follows
+a script: an early false move that traps traders, then a reversal; the
+pre-market range sets the day's direction; the opening range gets "swept" and
+then reverses.
 
-**ORB's zero is exact, and it is the sharpest result here.** Its t is undefined
-because the difference is identically zero on *every* trade: an upward
-opening-range break *is* a positive sign of the recent move, so the momentum
-rule picks the same side every time. ORB is a momentum rule with a level drawn
-on top of it.
+| claim | what happened |
+|---|---|
+| the early move is a fake-out that reverses | reverses 50.5% of the time — coin flip |
+| the pre-market sets the day's direction | right 49.2% of the time — coin flip |
+| the opening range gets swept, then reverses | the opposite: breaks tend to **continue** |
+| opening gaps fill the same day | small gaps usually do (69%), big gaps usually don't (27%) |
 
-Timing adds nothing either: entering at the signal is indistinguishable from
-entering a few bars later, on all four entries.
+### 3. Everything lost exactly the same amount — which was the clue
 
-## Where to read the findings
+Next, the entry setups: break-and-retest of yesterday's high or low, and the
+opening range breakout. We measure results in **R** — units of the amount
+risked. Lose your stop and you're at −1R; hit a 3-to-1 target and you're at +3R.
+
+Thirteen different strategies all came back between **−0.07R and −0.14R**.
+Different setups, different exits, same answer. That's not what real
+differences look like, so we went looking for the cause and found it in our own
+setup. The stops were so tight that **trading costs alone** accounted for the
+loss: the same 2bp cost is 0.135R on a very tight stop, and 0.034R on a normal
+one. We had built the same penalty into every test.
+
+We'd also been fooled by our own detector. **73% of the "retests" it found were
+just the bar right after the breakout** — not price moving away and coming back.
+Nobody would call that a retest, and nothing in the statistics showed it.
+Plotting six real examples did.
+
+### 4. A fair comparison is harder than it looks
+
+With that fixed, the real question was: does entering on a setup beat entering
+at a **random** moment? Getting a clean answer took several tries, because each
+comparison turned out to be subtly unfair:
+
+- Testing **long trades only** mostly measured whether the market went up in
+  2021–2026. It did.
+- On a day that trends up, the setups fire more long signals than short ones.
+  Averaging all trades therefore leaned toward whichever side the day rewarded,
+  which flattered the setups for reasons that had nothing to do with skill.
+- Our random comparison trades were sometimes drawn from **before** the setup
+  fired, so they caught the very move that created the setup.
+
+The final design pairs each real trade with a random entry in the same stock,
+same day, same direction, same risk, a few bars later.
+
+### 5. The answer: right direction, no timing, too small to pay
+
+With a fair comparison, the setups do pick the right **direction** a little more
+often than chance — worth **0.7 to 1.9 hundredths of a percent**. After
+correcting for testing four setups at once, only one (the pullback) is
+convincingly above zero.
+
+But the **timing** adds nothing. Entering at the setup is no better than
+entering a few bars later in the same direction. And realistic trading costs
+are 3–6 hundredths of a percent, well above the edge.
+
+### 6. It's just momentum
+
+If the setup picks direction but not timing, maybe it's only telling you which
+way price has already been moving. So we compared each setup against a rule
+that ignores the chart entirely — same entry bar, same stop, same target, but go
+long if price is up over the last 30 minutes and short if it's down.
+
+| setup | setup's result | momentum rule | difference |
+|---|---|---|---|
+| pullback after a run | +0.0210R | +0.0183R | +0.006 (not significant) |
+| opening range breakout | +0.0198R | +0.0198R | **exactly 0** |
+| VWAP reclaim | +0.0148R | +0.0215R | −0.003 (not significant) |
+| break and retest of a level | +0.0086R | +0.0084R | +0.004 (not significant) |
+
+**No setup beats the momentum rule.** The opening range breakout is exactly
+equal on every single trade, because an upward break of the opening range *is*
+price going up — the two rules always pick the same side. **The opening range
+breakout is a momentum rule with a line drawn on the chart.**
+
+## One pattern claim did check out
+
+**Fair value gaps fill at roughly the rates people say they do.**
+
+| | we measured | published |
+|---|---|---|
+| price comes back to touch the gap | 78.7% | 74.6% |
+| fills it halfway | 68.4% | 61.2% |
+| fills it completely | 46.1% | 48.7% |
+
+The geometry is real. Trading it (break of structure → gap → entry on
+the tap) did no better than a random entry: −0.109R against −0.121R. Both
+numbers were measured before the cost fix in part 3, so both carry the same
+artificial penalty — the comparison between them is what counts.
+
+## What this test can't see
+
+- **News.** One strategy we tested says: never trade on news days, only after.
+  We have no news calendar, so we couldn't test that version.
+- **Index futures.** Almost all of these setups are taught on ES, NQ and SPY. We
+  tested individual stocks. The futures data is downloaded; **no test has been
+  run on it yet.**
+- **Order flow.** We see 5-minute price bars only — not the order book or
+  individual trades.
+- **The level's real job.** If a support/resistance line is meant to tell you
+  *where to put your stop* rather than *which way to trade*, we've been testing
+  the wrong thing. That's untested.
+
+## Where to go next
 
 | | |
 |---|---|
-| **[FINDINGS.md](FINDINGS.md)** | **Start here.** Every claim, how it was measured, every correction, all limitations. |
-| [experiments/](experiments/) | One file per claim, with an index table mapping each to its verdict. |
-| [note/open-tests.html](note/) | The same story written for a practitioner, definitions first. |
-| [figures/](figures/) | One chart per experiment, plus rendered detections used to check the detector by eye. |
-| [prereg/](prereg/) | Pre-registrations, written before the runs. `prereg/ifvg.md` is written and **not yet run.** |
-| [LITERATURE.md](LITERATURE.md) | What the academic record already says. |
+| **[FINDINGS.md](FINDINGS.md)** | The full record: every claim, method, correction and limitation |
+| [experiments/](experiments/) | One script per claim, with an index mapping each to its result |
+| [note/open-tests.html](note/) | The same story written for an experienced day trader, definitions first |
+| [figures/](figures/) | Charts per experiment, and rendered examples of what the detector found |
+| [prereg/](prereg/) | Rules written before the tests — one (inverse fair value gaps) not yet run |
+| [lib/](lib/), [data/](data/), [render/](render/), [diagnostics/](diagnostics/) | Shared code, data download, chart rendering, one-off checks — each with its own README |
 
-## Layout
+## Words used here
 
-```
-FINDINGS.md      every claim, correction and limitation -- the main document
-experiments/     one file per claim, e02 .. e18, with an index
-lib/             shared detectors: levels, breaks, retests, R-multiples
-data/            MarketParquet fetchers + the daily table build step
-render/          figure generation (and the thing that caught error 02)
-diagnostics/     one-off scripts behind individual quoted numbers
-prereg/          pre-registrations, including one not yet run
-figures/         output
-note/            the practitioner write-up
-```
-
-Every directory has a README explaining what is in it and why.
-
-## The scoreboard
-
-| # | Claim | Result | Verdict |
-|---|---|---|---|
-| E1 | The open differs from the rest of the day | 2.94× midday range; 35% of volume in 23% of hours | **Confirmed** |
-| E2 | Opening gaps fill | 69% for gaps <0.2%, 27% for gaps >2% | Size-dependent |
-| E3 | The opening move is a false move (PO3 / judas) | 50.5% reversal vs 50.0% coin flip | Null |
-| E4 | The opening range is swept, then reverses | breaks continue; fading loses 5.7 bp | Refuted |
-| E5 | Pre-market sets the day's direction | 49.2% same-direction; the high-sweep rule inverts | Refuted |
-| E6 | Prior-day S/R break, then retest | −0.073R across two stop definitions | Negative |
-| E7 | ORB on high relative-volume names | +0.009R; prereg needed +0.05 | Exploratory |
-| E8 | The exit rule is what decides it | 7 policies within 0.04R, all negative | Refuted |
-| E9 | *Descriptive:* what trades actually do | losers peak bar 1–7, winners bar 40 | — |
-| E10–E10f | Structured entries beat a random bar | direction +0.7 to +1.9 bp gross; timing nothing | Real, unpayable |
-| E12 | FVGs fill at the published rates | 78.7 / 68.4 / 46.1% vs 74.6 / 61.2 / 48.7% | **Replicates** |
-| E13 | Break of structure → FVG → tap entry | −0.109R; random entry −0.121R | Negative |
-| E15–E17 | Direction and timing, matched placebo | direction positive, timing zero | See log |
-| **E18** | **The pattern beats naive momentum** | **it does not, on any entry** | **Refuted** |
-
-## Ten errors, and what caught each
-
-The corrections are the most reusable thing in this repo, and
-[FINDINGS.md](FINDINGS.md) records all of them. The pattern in *how*
-they were caught matters more than any single result: **five of ten were
-spotted because a number was far larger than its mechanism could explain.**
-
-A few worth naming:
-
-- **73% of "retests" were the next bar.** The detector took the first bar whose
-  low touched the level — usually the bar right after the breakout. Caught by
-  rendering six real detections and looking at them.
-- **Stops so tight that friction looked like failure.** Thirteen strategies all
-  returned −0.07 to −0.14R. That convergence was the tell: the same 2 bp round
-  trip costs −0.135R on a half-bar stop and −0.034R on a two-bar stop.
-- **A look-ahead in the placebo arm.** Placebos drawn *before* their signal
-  enter ahead of the breakout and capture the move that defines it — they earn
-  +0.67R against the signal's −0.08R.
-- **Two numbers that were never the same statistic.** Two ORB figures disagreed
-  in sign (−0.0700 vs +0.0198). The first explanation was wrong; the real cause
-  was that one traded long breaks only, net of costs, on a tenth of the sample.
-  With both sides in, ORB's clustered standard error is *larger than the gap
-  being argued over* — it was never significant in either direction.
-
-## What this test cannot see
-
-- **No news calendar.** One tested strategy says explicitly: never trade during
-  news, only after. We cannot filter on that at all.
-- **Single stocks, not indices.** 199 of 200 names are individual stocks; these
-  setups are overwhelmingly taught on ES, NQ and SPY. Futures data is
-  downloaded and **not one test has been run on it.**
-- **No tape.** 5-minute OHLCV only — no order flow, no depth, no prints.
-- **The entry rule may be the wrong object.** If the level's job is to set the
-  *risk unit* rather than the direction, every test here aims at the wrong
-  target. Untested.
+| term | meaning |
+|---|---|
+| **R** | Profit in units of what you risked. −1R is a full stop-out; +3R is a 3-to-1 winner. |
+| **bp** | Basis point: one hundredth of a percent. |
+| **opening range breakout (ORB)** | Trade in the direction price breaks the 9:30–10:00 high or low. |
+| **break and retest** | Price closes through yesterday's high/low, moves away, comes back to touch it, then continues. |
+| **VWAP reclaim** | Price closes back above the day's volume-weighted average price after being below it. |
+| **pullback** | After a run of more than 0.5% from the open, enter on the first bar against the run. |
+| **fair value gap** | A three-candle pattern where the first and third candles don't overlap, leaving a gap. |
+| **ICT** | "Inner Circle Trader", a popular trading-education brand whose session-timing ideas we tested in part 2. |
 
 ## Running it
 
-Run everything **from the repository root** — scripts resolve `cache/` and
-`lib/` relative to it.
+Run from the repository root:
 
 ```bash
 pip install -r requirements.txt
-python3 data/mp5_fetch.py              # 5-minute archive -> cache/mp5min/
-python3 data/build_daily.py            # daily summary table -> cache/intraday_daily.parquet
-python3 experiments/e18_momentum.py    # the decisive test
+python3 data/mp5_fetch.py              # download the 5-minute archive
+python3 data/build_daily.py            # build the shared daily table
+python3 experiments/e18_momentum.py    # the momentum comparison
 ```
 
-Scripts read `cache/` relative to the repo root. The archive is large (~24 GB
-of 5-minute bars), so if you already hold it elsewhere, point at it rather than
-re-downloading:
-
-```bash
-ln -s /path/to/your/cache cache      # gitignored, never committed
-```
-
-A MarketParquet key is expected at `~/.market_parquest/api_key.txt`, **never in
-the repo** — the pre-commit hook in `hooks/` scans for it. Enable with
-`git config core.hooksPath hooks`.
-
-No market data is redistributed here; `cache/` is gitignored.
+A MarketParquet key is expected at `~/.market_parquest/api_key.txt`, never in
+the repo; the pre-commit hook in `hooks/` scans for it. The archive is ~24 GB —
+if you already have it, `ln -s /path/to/cache cache` instead.
 
 ## Related repositories
 
-This work started as one repository and split into three when the questions
-stopped being the same question.
-
 | repository | question | answer |
 |---|---|---|
-| [**statarb-replication**](https://github.com/eddieh88/statarb-replication) | Does *Deep Learning Statistical Arbitrage* replicate, and does it still work? | Replicates; does not survive past 2016 |
-| [**characteristic-factors**](https://github.com/eddieh88/characteristic-factors) | Do IPCA and the conditional autoencoder pay out of sample? | Ambiguous by the pre-registered rule, dead in substance |
-| [**intraday-patterns**](https://github.com/eddieh88/intraday-patterns) | Do the chart setups taught in trading education work? | No entry beats a naive momentum rule at the same bar |
-
-The shared thread is the error log: each repository records what went wrong and
-what caught it, because in this kind of work that is the part that transfers.
+| [**statarb-replication**](https://github.com/eddieh88/statarb-replication) | Does deep-learning stat arb replicate, and does it still work? | Replicates. Does not survive past 2016. |
+| [**characteristic-factors**](https://github.com/eddieh88/characteristic-factors) | If prices alone stopped working, do models built on company fundamentals do better? | No. What they found was market exposure. |
+| **this one** | Do the chart setups taught in trading education work? | No. Every edge they have is plain momentum. |
