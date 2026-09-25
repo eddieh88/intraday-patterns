@@ -7,7 +7,7 @@ volatility.  Here: stop is the FURTHER of (bar low - pad) and (entry - M*ATR14),
 so it can never be closer than half an average day's range.
 """
 import numpy as np, pandas as pd, warnings, sys
-warnings.filterwarnings("ignore"); sys.path.insert(0, ".")
+warnings.filterwarnings("ignore"); sys.path.insert(0, "lib")
 from swing_levels import scan_trades
 RR, MAXBARS, PAD, ATR_MULT, ATR_N = 3.0, 20, 0.002, 0.5, 14
 

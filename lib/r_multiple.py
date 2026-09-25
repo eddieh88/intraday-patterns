@@ -13,7 +13,7 @@ still lose.
 """
 import numpy as np, pandas as pd, warnings
 warnings.filterwarnings("ignore")
-import sys; sys.path.insert(0, ".")
+import sys; sys.path.insert(0, "lib")
 from swing_levels import scan_trades   # provided below if missing
 
 RR, MAXBARS, PAD = 3.0, 20, 0.002

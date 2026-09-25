@@ -14,7 +14,7 @@
    that estimand's downward bias is largest.  Rerun with matched placebos.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 COST_BP, MAXB, K, CAP = 0.0, 60, 12, 3      # GROSS; cap signals per side/session
 rng=np.random.default_rng(0)

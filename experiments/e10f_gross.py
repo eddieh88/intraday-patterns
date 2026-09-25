@@ -1,4 +1,16 @@
-"""E10e: the symmetric entry test, with two errors fixed.
+"""E10f: E10e run GROSS of costs, plus paired session-level inference.
+
+Two further points from review:
+
+(a) Structured entries cluster at 09:35-10:00 where bars are ~3x wider, so
+    stops built from bar range are wider in bp and the same 1bp costs FEWER R.
+    Random entries spread into the quieter late window get tighter stops and
+    more cost drag per R.  If the excess over random shrinks when costs are
+    removed, the excess is mostly stop geometry, not signal.
+
+(b) The t-stat on the excess was computed as sqrt(se^2 + rse^2), treating the
+    two samples as independent.  They share sessions.  Paired session-level
+    differences are the right construction and are tighter.
 
 ERROR A -- read the wrong column.  With edge e and drift d:
     long  ~ e + d
@@ -17,9 +29,9 @@ Also: standard errors clustered by session date, with the intraclass
 correlation estimated from the data rather than assumed.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import session_frames
-COST_BP, MAXB = 1.0, 60
+COST_BP, MAXB = 0.0, 60
 rng=np.random.default_rng(0)
 
 def trade(o,h,l,c,e,up):
@@ -85,46 +97,29 @@ for i,(s,dt,g) in enumerate(session_frames(files,allnames)):
         for e in idx:
             if e>=len(c)-8: continue
             r_=trade(o,h,l,c,e,up)
-            if r_ is not None: rows.append(dict(date=dt,entry=k,up=up,R=r_))
+            if r_ is not None:
+                rows.append(dict(date=dt,entry=k,up=up,R=r_,
+                                 risk=abs(c[e]-(c[e]-2*(h[e]-l[e]) if up else c[e]+2*(h[e]-l[e])))/c[e]))
     if i%25000==0 and i: print(f"  {i:,} sessions, {len(rows):,} trades, {time.time()-t0:.0f}s",flush=True)
 
-T=pd.DataFrame(rows); T.to_parquet("cache/e10e_corrected.parquet",index=False)
+T=pd.DataFrame(rows); T.to_parquet("cache/e10f_gross.parquet",index=False)
 print(f"\n{len(T):,} trades  ({time.time()-t0:.0f}s)\n")
 
-def clustered(x, by):
-    """mean and t-stat with SEs clustered on date; also returns the ICC"""
-    df=pd.DataFrame({"x":x,"g":by})
-    gm=df.groupby("g").x.mean(); gn=df.groupby("g").x.size()
-    m=x.mean(); k=len(gm)
-    se=gm.std(ddof=1)/np.sqrt(k)                       # session-level SE
-    mb=gn.mean()
-    vb=gm.var(ddof=1); vw=df.groupby("g").x.var(ddof=1).mean()
-    icc=vb/(vb+vw) if (vb+vw)>0 else np.nan
-    return m, m/se if se>0 else np.nan, se, k, icc
-
-print(f"{'entry':12s}{'long R':>9s}{'short R':>9s}{'(L+S)/2 = EDGE':>17s}{'clust t':>9s}"
-      f"{'L-S = DRIFT':>14s}")
-print("-"*72)
-res={}
-for k,g_ in T.groupby("entry"):
-    L=g_[g_.up]; S=g_[~g_.up]
-    if len(L)<200 or len(S)<200: continue
-    avg=g_.copy(); avg["x"]=np.where(avg.up, avg.R, avg.R)   # both sides are already P&L
-    m,t,se,nd,icc=clustered(avg.R.values, avg.date.values)
-    res[k]=(m,se,nd,icc)
-    print(f"{k:12s}{L.R.mean():+9.3f}{S.R.mean():+9.3f}{m:+17.4f}{t:+9.2f}"
-          f"{L.R.mean()-S.R.mean():+14.3f}")
-print("-"*72)
-if "random" in res:
-    rm,rse,rnd,ricc=res["random"]
-    print(f"\nestimated intraclass correlation (random arm): {ricc:.4f}")
-    print(f"sessions used as clusters: {rnd:,}\n")
-    print(f"{'entry':12s}{'edge':>10s}{'excess over random':>20s}{'SE(diff)':>10s}{'t':>8s}")
-    print("-"*62)
-    for k,(m,se,nd,icc) in sorted(res.items(),key=lambda x:-x[1][0]):
-        if k=="random": continue
-        d=m-rm; sed=np.sqrt(se**2+rse**2)
-        print(f"{k:12s}{m:+10.4f}{d:+20.4f}{sed:10.4f}{d/sed:+8.2f}")
-    print(f"\n{'random':12s}{rm:+10.4f}{'(baseline)':>20s}")
-    print(f"\nminimum detectable edge at 80% power, 5% two-sided: "
-          f"~{2.8*np.sqrt(2)*rse:.4f}R")
+sess=T.groupby(["entry","date"]).R.mean().unstack(0)        # session-level means
+print(f"{'entry':12s}{'gross edge':>12s}{'excess vs random':>18s}{'95% CI':>22s}"
+      f"{'paired t':>10s}{'median risk':>13s}")
+print("-"*90)
+rnd=sess["random"]
+for k in sorted([c for c in sess.columns if c!="random"]):
+    d=(sess[k]-rnd).dropna()                              # PAIRED on session
+    m=d.mean(); se=d.std(ddof=1)/np.sqrt(len(d))
+    lo,hi=m-1.96*se, m+1.96*se
+    rp=T[T.entry==k].risk.median()
+    print(f"{k:12s}{sess[k].mean():+12.4f}{m:+18.4f}"
+          f"   [{lo:+.4f}, {hi:+.4f}]{m/se:+10.2f}{rp:13.2%}")
+print("-"*90)
+print(f"{'random':12s}{rnd.mean():+12.4f}{'(baseline)':>18s}{'':22s}{'':10s}"
+      f"{T[T.entry=='random'].risk.median():13.2%}")
+print(f"\nsessions: {len(rnd):,}   COST_BP = {COST_BP}")
+print("\nCompare the excess column to the same column in e10e (net of 1bp).")
+print("If it shrinks materially, the net-of-cost excess was stop geometry.")

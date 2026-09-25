@@ -1,6 +1,6 @@
 """One figure per intraday experiment, from the cached tables.
 
-    python3 render_experiments.py
+    python3 render/render_experiments.py
     -> figures/E1..E7_*.png
 
 Each figure shows the measurement, the benchmark it is judged against, and the

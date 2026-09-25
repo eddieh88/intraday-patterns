@@ -1,4 +1,4 @@
-"""E16: matched placebo -- the design that has no weighting problem.
+"""E16b: matched placebo, with the RISK UNIT matched too.
 
 Every prior statistic weighted trades in a way that depends on n, the number of
 signals per side that session, which is only known at 11:00:
@@ -18,17 +18,26 @@ same name, same session, same side.  Average the signal-minus-placebo
 differences with EQUAL WEIGHT PER TRADE, clustered by session.  The placebo
 inherits the signal's side and timing, so tilt, time-of-day and cost geometry
 all cancel, and no n-dependent weight appears anywhere.
+
+E16 matched side, session and time neighbourhood but NOT the risk unit.  Each
+arm took stop = 2 x ITS OWN bar range, so a breakout signal got a wide stop and
+a distant 3R target while its quiet neighbour got a tight stop and a near one.
+The placebo reached +3R 14.3% of the time against the signal's 5.6%, and the
+paired difference measured bar width rather than entry quality.
+
+Here the placebo inherits the SIGNAL's risk in price terms.  Only the entry
+bar differs.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 COST_BP, MAXB, K = 1.0, 60, 12          # placebo drawn within +/-12 bars (1 hour)
 rng=np.random.default_rng(0)
 
-def trade(o,h,l,c,e,up):
-    entry=c[e]; bar=h[e]-l[e]
-    stop=entry-2*bar if up else entry+2*bar
-    risk=abs(entry-stop)
+def trade(o,h,l,c,e,up,risk=None):
+    entry=c[e]
+    if risk is None: risk=2*(h[e]-l[e])          # signal sets the risk unit
+    stop=entry-risk if up else entry+risk
     if risk<=0 or risk/entry<0.0003: return None
     tgt=entry+3*risk if up else entry-3*risk
     cost=COST_BP*1e-4*entry; end=min(len(c),e+1+MAXB)
@@ -92,12 +101,13 @@ for i,(s,dt,g) in enumerate(session_frames(files,allnames)):
             cand=[x for x in range(lo_,hi_+1) if x!=e]
             if not cand: continue
             p=int(rng.choice(cand))
-            a=trade(o,h,l,c,e,up); b=trade(o,h,l,c,p,up)
+            rk=2*(h[e]-l[e])                     # the SIGNAL's risk, in price
+            a=trade(o,h,l,c,e,up,rk); b=trade(o,h,l,c,p,up,rk)   # placebo inherits it
             if a is None or b is None: continue
             rows.append(dict(date=dt,entry=k,up=up,sig=a,pla=b,diff=a-b))
     if i%25000==0 and i: print(f"  {i:,} sessions, {len(rows):,} pairs, {time.time()-t0:.0f}s",flush=True)
 
-T=pd.DataFrame(rows); T.to_parquet("cache/e16_matched.parquet",index=False)
+T=pd.DataFrame(rows); T.to_parquet("cache/e16b_riskmatched.parquet",index=False)
 print(f"\n{len(T):,} matched pairs  ({time.time()-t0:.0f}s)\n")
 print(f"{'entry':12s}{'n pairs':>9s}{'signal':>9s}{'placebo':>9s}{'diff':>9s}"
       f"{'clust t':>9s}{'95% CI':>22s}")

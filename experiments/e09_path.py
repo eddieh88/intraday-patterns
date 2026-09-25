@@ -11,7 +11,7 @@ Per trade, measured bar by bar from entry to the 16:00 close:
 and the average R path, separately for eventual winners and losers.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import session_frames, find_setups
 MAXB=60
 

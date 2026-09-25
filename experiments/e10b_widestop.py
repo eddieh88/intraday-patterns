@@ -27,7 +27,7 @@ Stop for every entry: 0.5 x the entry bar's range below the entry, so the R
 denominator is constructed identically and the arms are comparable.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import session_frames, find_setups
 COST_BP, MAXB = 1.0, 60
 rng=np.random.default_rng(0)

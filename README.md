@@ -47,11 +47,28 @@ entering a few bars later, on all four entries.
 
 | | |
 |---|---|
-| **[INTRADAY_LOG.md](INTRADAY_LOG.md)** | **Start here.** Every claim, how it was measured, every correction, all limitations. |
-| [FINDINGS_intraday.md](FINDINGS_intraday.md) | The earlier pre-registered intraday tests (A and B). |
+| **[FINDINGS.md](FINDINGS.md)** | **Start here.** Every claim, how it was measured, every correction, all limitations. |
+| [experiments/](experiments/) | One file per claim, with an index table mapping each to its verdict. |
+| [note/open-tests.html](note/) | The same story written for a practitioner, definitions first. |
 | [figures/](figures/) | One chart per experiment, plus rendered detections used to check the detector by eye. |
-| [PREREG_orb.md](PREREG_orb.md), [PREREG_bos_fvg.md](PREREG_bos_fvg.md), [PREREG_ifvg.md](PREREG_ifvg.md), [PREREG_intraday.md](PREREG_intraday.md) | Pre-registrations, written before the runs. `PREREG_ifvg.md` is written and **not yet run.** |
+| [prereg/](prereg/) | Pre-registrations, written before the runs. `prereg/ifvg.md` is written and **not yet run.** |
 | [LITERATURE.md](LITERATURE.md) | What the academic record already says. |
+
+## Layout
+
+```
+FINDINGS.md      every claim, correction and limitation -- the main document
+experiments/     one file per claim, e02 .. e18, with an index
+lib/             shared detectors: levels, breaks, retests, R-multiples
+data/            MarketParquet fetchers + the daily table build step
+render/          figure generation (and the thing that caught error 02)
+diagnostics/     one-off scripts behind individual quoted numbers
+prereg/          pre-registrations, including one not yet run
+figures/         output
+note/            the practitioner write-up
+```
+
+Every directory has a README explaining what is in it and why.
 
 ## The scoreboard
 
@@ -75,7 +92,7 @@ entering a few bars later, on all four entries.
 ## Ten errors, and what caught each
 
 The corrections are the most reusable thing in this repo, and
-[INTRADAY_LOG.md](INTRADAY_LOG.md) records all of them. The pattern in *how*
+[FINDINGS.md](FINDINGS.md) records all of them. The pattern in *how*
 they were caught matters more than any single result: **five of ten were
 spotted because a number was far larger than its mechanism could explain.**
 
@@ -110,11 +127,14 @@ A few worth naming:
 
 ## Running it
 
+Run everything **from the repository root** — scripts resolve `cache/` and
+`lib/` relative to it.
+
 ```bash
 pip install -r requirements.txt
-python3 data/mp5_fetch.py          # MarketParquet 5-minute archive -> cache/mp5min/
-python3 intraday_build.py          # one daily summary table -> cache/intraday_daily.parquet
-python3 e18_momentum.py            # the decisive test
+python3 data/mp5_fetch.py              # 5-minute archive -> cache/mp5min/
+python3 data/build_daily.py            # daily summary table -> cache/intraday_daily.parquet
+python3 experiments/e18_momentum.py    # the decisive test
 ```
 
 Scripts read `cache/` relative to the repo root. The archive is large (~24 GB

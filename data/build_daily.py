@@ -5,7 +5,7 @@ overnight move, the opening range, the rest of the session.  Recomputing them
 per experiment meant a 30-minute groupby.apply each time.  Aggregate once with
 vectorised named-aggregations, cache, and every test afterwards is seconds.
 
-  python3 intraday_build.py      -> cache/intraday_daily.parquet
+  python3 data/build_daily.py      -> cache/intraday_daily.parquet
 """
 import pandas as pd, numpy as np, glob, time
 

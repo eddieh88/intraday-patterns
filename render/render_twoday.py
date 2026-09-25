@@ -6,7 +6,7 @@ so its origin is visible rather than asserted.
 """
 import pandas as pd, numpy as np, glob, sys, os, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import find_setups, MIN_GAP, MIN_ADV, RWIN
 
 NAMES={"AAPL","MSFT","NVDA","AMD","TSLA","META","AMZN","GOOGL","NFLX","JPM","COST","AVGO"}

@@ -7,7 +7,7 @@ clustering and gaps all break the martingale.  So sweep it.
 """
 import numpy as np, pandas as pd, warnings, sys
 warnings.filterwarnings("ignore")
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from swing_levels import scan_trades
 MAXBARS, PAD = 20, 0.002
 

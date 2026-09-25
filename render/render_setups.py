@@ -4,14 +4,14 @@ Every parameter in setups_v2.py is a judgement call, and a parameter sweep
 cannot tell you whether the thing being detected is the thing a trader would
 call a break-and-retest.  Only looking at the charts can.
 
-    python3 render_setups.py            # 6 examples, mixed outcomes
-    python3 render_setups.py T 3        # 3 trendline winners
+    python3 render/render_setups.py            # 6 examples, mixed outcomes
+    python3 render/render_setups.py T 3        # 3 trendline winners
 
 Writes figures/real_setups.png
 """
 import numpy as np, pandas as pd, warnings, sys, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-warnings.filterwarnings("ignore"); sys.path.insert(0, ".")
+warnings.filterwarnings("ignore"); sys.path.insert(0, "lib")
 from setups_v2 import (pivots, horiz_level, trendline, struct_stop,
                        K, LOOKBACK, CLUST, MIN_SWINGS, BUF, RWIN, MAXBARS, PAD, TL_MIN_PTS)
 RR=3.0

@@ -8,7 +8,7 @@
 Short side mirrors it on PML.  Costs 2bp round trip, stops fill through gaps.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, ".")
+sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 COST_BP, T0, T1, MINRR = 2.0, 9.5, 11.0, 1.0
 

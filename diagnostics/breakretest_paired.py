@@ -6,7 +6,7 @@ so the difference is purely the timing.
 """
 import numpy as np, pandas as pd, warnings, sys
 from scipy import stats
-warnings.filterwarnings("ignore"); sys.path.insert(0, ".")
+warnings.filterwarnings("ignore"); sys.path.insert(0, "lib")
 from setups_v2 import (pivots, horiz_level, trendline, struct_stop,
                        K, LOOKBACK, CLUST, BUF, RWIN, MAXBARS, PAD, MIN_GAP, MIN_ADV)
 RR=3.0
