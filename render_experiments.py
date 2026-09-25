@@ -133,16 +133,24 @@ ax[0].plot(xs*100,(a+b*xs)*100,color="#d62728",lw=1.4,label=f"slope {b:+.4f}")
 ax[0].set_xlabel("pre-market move 04:00-09:30 (%)"); ax[0].set_ylabel("9:30-11:00 move (%)")
 ax[0].legend(fontsize=8); ax[0].set_title("E5: pre-market carries no directional signal")
 sh=E[(E.hi_pre>E.pdh)&(E.c_pre<E.pdh)]; sl=E[(E.lo_pre<E.pdl)&(E.c_pre>E.pdl)]
-vals=[(-sh.op).mean()*100,(sl.op).mean()*100]
-ax[1].bar(["swept prior HIGH\n-> go short","swept prior LOW\n-> go long"],vals,
-          color=["#d62728" if v<0 else "#41ab5d" for v in vals])
-ax[1].axhline(0,color="#111",lw=.8)
-ax[1].set_ylabel("mean 9:30-11:00 return in the claimed direction (%)")
-ax[1].set_title("E5: the 'sweep confirms direction' rule LOSES money")
-for i,(v,n) in enumerate(zip(vals,[len(sh),len(sl)])):
-    ax[1].text(i,v/2,f"n={n:,}",ha="center",fontsize=8)
+base=E.op.mean()*100
+taught=[-sh.op.mean()*100-base, sl.op.mean()*100-base]     # edge over baseline
+opp   =[ sh.op.mean()*100-base,-sl.op.mean()*100-base]
+xx=np.arange(2); w=.35
+ax[1].bar(xx-w/2,taught,w,color="#d62728",label="the taught direction")
+ax[1].bar(xx+w/2,opp,w,color="#41ab5d",label="the OPPOSITE direction")
+ax[1].axhline(0,color="#111",lw=1)
+ax[1].set_xticks(xx)
+ax[1].set_xticklabels([f"swept prior HIGH\ntaught: short  (n={len(sh):,})",
+                       f"swept prior LOW\ntaught: long  (n={len(sl):,})"],fontsize=8)
+ax[1].set_ylabel("edge over unconditional (%)")
+ax[1].legend(fontsize=7)
+ax[1].set_title("E5: high-sweep is INVERTED; low-sweep is absent")
+for i,(a_,b_) in enumerate(zip(taught,opp)):
+    ax[1].text(i-w/2,a_,f"{a_:+.3f}",ha="center",va="top" if a_<0 else "bottom",fontsize=7)
+    ax[1].text(i+w/2,b_,f"{b_:+.3f}",ha="center",va="bottom" if b_>0 else "top",fontsize=7)
 fig.suptitle(f"E5  does pre-market tell you the day's direction?   "
-             f"n={len(E):,}   REFUTED (49.2% same-direction)",fontsize=11)
+             f"n={len(E):,}   REFUTED — and the high-sweep rule is BACKWARDS",fontsize=11)
 save(fig,"E5_premarket")
 
 # ---------------- E6: prior-day S/R break + retest ----------------

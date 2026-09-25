@@ -14,6 +14,8 @@ Data: MarketParquet `stock_5min`, 2021-01-04 .. 2026-09-21, 1,462 sessions,
 | E5 | pre-market determines the day's direction | "session script" post | corr(04:00-09:30 move, 9:30-11:00 move); sweep-and-reverse rule | top 200 | 261,143 | **REFUTED** 49.2% same-direction; sweep rule loses, t=-6.1 |
 | E6 | prior-day S/R break + retest pays in the open | break-and-retest diagrams | R-multiple, stop below entry bar (a) and below level (b) | top 100 | 86,170 / 59,668 | **NEGATIVE** -0.099R then -0.073R, t=-8.3 |
 | E7 | ORB on high-relative-volume names | Zarattini-Barbon-Aziz (2024) | R-multiple, 2 stop variants, by relvol rank tier | top 1000 filtered, 2,392 names | 211,741 | **DEAD by prereg** +0.009R t=1.25; filter sorts monotonically |
+| E8 | the EXIT rule decides it, not the entry | user — "not all people hold til 3R or perish" | 7 exit policies on IDENTICAL entries | top 100 | 35,232 | **REFUTED** all seven lose, -0.063R to -0.101R |
+| E9 | (descriptive) what does the trade do after entry? | — | MFE / MAE / bars-to-peak / bars-to-stop | top 100 | running | — |
 
 ## How each was approached
 
@@ -22,8 +24,44 @@ Data: MarketParquet `stock_5min`, 2021-01-04 .. 2026-09-21, 1,462 sessions,
 - **E2-E5** event studies on a cached per-symbol-day table. Each is a single
   conditional mean or sign-agreement rate against an unconditional benchmark.
   No trade simulation, so no costs, no stops, no position sizing.
-- **E6-E7** full trade simulation: entry, stop, exit, gap-through fills, 2bp
-  costs. These are the only two that model execution.
+- **E6-E8** full trade simulation: entry, stop, exit, gap-through fills, 2bp
+  costs. The only ones that model execution.
+- **E8** holds entries fixed and varies only the exit, so the two are separated
+  rather than confounded. Its result -- a 0.04R spread across seven very
+  different policies, all negative -- is why the remaining question is about
+  the entry, not the exit.
+- **E9** is descriptive, not a strategy test. It constrains which exits could
+  possibly work, rather than selecting one after the fact.
+
+## CORRECTION — the universal -0.1R was a measurement artifact
+
+Every trade-simulating experiment (E6-E13) returned a mean between -0.07R and
+-0.14R regardless of entry, exit, or filtering. That convergence is evidence
+about the measurement, not thirteen independent verdicts. Decomposition, on
+138,930 random-entry trades:
+
+| stop width | risk% | ideal/0bp | ideal/2bp | gap/0bp | gap/2bp |
+|---|---|---|---|---|---|
+| 0.5 bar | 0.18% | **+0.014** | -0.121 | +0.012 | -0.123 |
+| 1 bar | 0.36% | **+0.018** | -0.050 | +0.017 | -0.051 |
+| 2 bars | 0.72% | **+0.013** | -0.021 | +0.012 | -0.022 |
+
+- **Gross is slightly POSITIVE everywhere** (+0.013 to +0.018R). The bracket is
+  not broken; that number is equity drift.
+- **Slippage is negligible** -- gap-through fills cost 0.002R.
+- **Costs are the whole story, and scale inversely with stop width.** The same
+  2bp is -0.135R at a half-bar stop and -0.034R at a two-bar stop.
+
+I used stops of roughly half a bar range throughout, which turned a 2bp
+round trip into 11% of the risk unit. Every experiment then measured the same
+friction, which is why they all landed in the same band.
+
+**What this does not change:** gross edge is ~+0.015R everywhere, i.e. drift,
+not signal. The *relative* comparisons in E8 and E10 were computed on identical
+footings and stand. **What it does change:** the absolute figures reported for
+E6-E13, and the framing "every strategy loses 0.1R", which was wrong. The
+correct framing is "no strategy has gross edge, and the cost model then
+subtracted a constant that depended on my stop width."
 
 ## Limitations — all of them
 
@@ -43,5 +81,14 @@ Data: MarketParquet `stock_5min`, 2021-01-04 .. 2026-09-21, 1,462 sessions,
    unknown, and it is the number that decides E6 and E7.
 7. **Period is 2021-2026 only.** E7's source paper covers 2016-2023; the
    overlap is three years and gives exactly zero.
-8. **No intraday slippage model** beyond gap-through on stops. Market orders on
-   news-driven names will do worse than modelled.
+8. **No intraday slippage model** beyond gap-through on stops -- though the
+   decomposition shows this is worth only 0.002R, so it was never the issue.
+9. **Stops were too tight in E6-E13** (~0.5 bar range), which is the source of
+   the -0.1R artifact above. E10b re-runs the entry comparison at a 2-bar stop
+   and 1bp cost.
+10. **Indexes and futures were absent.** E1-E13 ran on single stocks: the top
+   100 by dollar volume contains 99 stocks and one ETF. The strategies being
+   tested are overwhelmingly taught on ES/NQ/SPY. `etf_5min` and `futures_5min`
+   have since been downloaded (3.2 GB and 511 MB); ES was verified
+   back-adjusted, with large overnight gaps no more concentrated in roll
+   windows than chance (25 observed vs 21 expected).
