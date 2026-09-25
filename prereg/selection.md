@@ -296,3 +296,32 @@ forward period (data after 2026-09-21).
   outcome on the prediction with session-clustered t; and coefficient signs,
   sizes and sign-consistency across folds.
 - Step 4 ranks on these same ridge predictions of `y`.
+
+### Amendment 4 — 2026-09-25, after step 4 failed on ridge
+
+**This amendment is made with step 3 and step 4 results visible**, and is marked
+as such. The registered study stopped at step 4. This adds one pre-specified
+second model, because a linear model cannot represent threshold effects of the
+kind traders describe ("continuation only when the gap is large *and* SPY
+agrees"), so a ridge null is not a null for every model.
+
+To keep this from becoming a search:
+
+- **One model, settings fixed here, never tuned on test blocks.** LightGBM,
+  L2 regression on the same winsorised `y`: `max_depth` 3, `num_leaves` 7,
+  `learning_rate` 0.02, `min_child_samples` 500, `feature_fraction` 0.8,
+  `bagging_fraction` 0.8 every iteration, `lambda_l2` 10, seed 0. The number of
+  trees is set by early stopping (patience 100, cap 2,000) on each training
+  set's own last six months, then refit on the full training set with that
+  number. Raw features — trees need no scaling — and no monotone constraints,
+  since this file states no priors.
+- **Everything else identical:** walk-forward blocks, purge, complete cases,
+  both targets reported as in step 3, both gates and both cost models as in
+  step 4.
+- **A stricter bar.** This is the second model tried, so the gate's critical
+  value is Bonferroni over two looks: **2.24** (97.5% two-sided) in place of
+  1.96, for both the confidence interval and the top-minus-bottom t.
+- **No third model.** If LightGBM fails, the study reports that neither a linear
+  nor a pre-specified nonlinear model finds the effect, and stops. The holdout
+  stays sealed.
+- If it passes, step 5 proceeds on the LightGBM predictions as registered.

@@ -45,3 +45,24 @@ ATR −0.012, session after FOMC +0.012, room to next level +0.011, first-bar
 share +0.011. Most keep their sign in 6 of 6 folds, but the folds use expanding
 windows and share most of their training data, so that agreement is not
 independent evidence. All are small.
+
+## Step 4 — the gate, on the ridge predictions: FAIL, both gates
+
+Ranked on predicted continuation. A gate passes only if, under both costs, the
+top fifth's net R has a session-clustered 95% CI above zero and top minus
+bottom has t > 1.96.
+
+| gate | top fifth, cost (a) 3bp/1R | cost (b) 0.023R | gross | top − bottom t (a / b) |
+|---|---|---|---|---|
+| pooled | −0.020 [−0.054, +0.014] | −0.011 [−0.045, +0.023] | +0.012 | 0.22 / 0.46 |
+| within-session | −0.015 [−0.038, +0.009] | −0.005 [−0.029, +0.018] | +0.018 | 0.75 / 1.15 |
+
+Net R by quintile of prediction, pooled, cost (a): −0.024, −0.013, −0.031,
+−0.029, −0.020 — not even ordered. Gross of costs the trade earns about +0.01R;
+costs are 0.023–0.03R.
+
+Exits: 77% at 11:00, 20% at the stop, 3% at the target. The pooled top fifth
+spans 648 of 689 sessions, so it is not a handful of days.
+
+**Registered reading: nothing → stop.** Ridge ends here. A pre-specified
+nonlinear model is added below by amendment, at a stricter bar.
