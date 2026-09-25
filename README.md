@@ -117,9 +117,17 @@ python3 intraday_build.py          # one daily summary table -> cache/intraday_d
 python3 e18_momentum.py            # the decisive test
 ```
 
-Scripts read `cache/` relative to the repo root and expect a MarketParquet key
-at `~/.market_parquest/api_key.txt`, **never in the repo** — the pre-commit
-hook in `hooks/` scans for it. Enable with `git config core.hooksPath hooks`.
+Scripts read `cache/` relative to the repo root. The archive is large (~24 GB
+of 5-minute bars), so if you already hold it elsewhere, point at it rather than
+re-downloading:
+
+```bash
+ln -s /path/to/your/cache cache      # gitignored, never committed
+```
+
+A MarketParquet key is expected at `~/.market_parquest/api_key.txt`, **never in
+the repo** — the pre-commit hook in `hooks/` scans for it. Enable with
+`git config core.hooksPath hooks`.
 
 No market data is redistributed here; `cache/` is gitignored.
 
