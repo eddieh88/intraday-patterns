@@ -1,0 +1,171 @@
+# Pre-registration — selecting name-days for a momentum entry
+
+Written 2026-09-25, **before any feature was built or any outcome of this design
+measured.** Changes after this commit require a dated amendment at the bottom of
+this file, made before the result they would affect is seen.
+
+## The question
+
+E18 showed that every setup's directional edge is plain momentum. So stop asking
+which pattern works, and ask: **can conditions visible at 09:45 pick out the
+name-days on which a momentum entry is profitable after costs?**
+
+## What has already been seen
+
+E1–E18 used the whole 2021–2026 sample, including the holdout below. The holdout
+therefore protects the *feature search* in this study, not the momentum baseline,
+which is already known. The only fully unseen data is what arrives after
+2026-09-21 — see *The forward test*.
+
+## Data
+
+- **Universe:** each day's top 100 from `cache/intraday_pool.parquet` (point-in-time,
+  prior 20 sessions of RTH dollar volume; guarded by `data/universe_check.py`).
+- **Development:** 2021-01-19 → 2025-03-31, **1,055 sessions**.
+- **Holdout:** 2025-04-01 → 2026-09-21, **370 sessions**. Enforced in code by
+  `lib/holdout.py`; nothing in this study may read it until step 5.
+- **Bars:** 5-minute, stamped at bar *start*. "The 09:30–09:45 window" is the
+  bars stamped 09:30, 09:35, 09:40.
+
+## The trade — one per name-day, fixed
+
+| | |
+|---|---|
+| side | sign of (close of 09:40 bar − open of 09:30 bar). No trade if zero. |
+| fill | **open of the 09:45 bar** — the first price available after the signal |
+| risk unit, 1R | high − low of the 09:30–09:45 window (median 131bp) |
+| stop / target | −1R / +2R from the fill, checked intrabar; stop assumed first on a tie |
+| time exit | close of the 10:55 bar (11:00) |
+| cost | 3bp round trip (0.023R at the median name-day); 6bp reported alongside |
+
+The trade is deliberately pattern-free. Patterns may return later as features.
+
+## Targets
+
+- **Primary, for modelling — signed continuation:**
+  `y = side × (close 10:55 − open 09:45) / 1R`. This is the direction-aware
+  quantity a momentum entry is paid on. Targets may use data after the fill;
+  features may not.
+- **Secondary — efficiency ratio** of 09:45–11:00: |net move| / sum of |bar
+  moves|. Sign-free. Used only to separate "features predict trend days" from
+  "features predict the opening direction persists", which can come apart.
+- **Economic outcome:** net R of the bracketed trade above.
+
+Why not absolute move: in R units a bigger move with proportionally wider noise
+leaves expected R unchanged. What pays is drift relative to noise, in the
+entry's direction.
+
+## Features — fixed list, all known by the close of the 09:40 bar
+
+Scale is ATR14 of daily RTH ranges, computed through the prior day.
+
+| family | feature |
+|---|---|
+| catalyst / in play | gap: (09:30 open − prior RTH close) / ATR |
+| | pre-market dollar volume / its prior-20-day mean |
+| | pre-market range / ATR |
+| opening | 09:30–09:45 range / ATR |
+| | 09:30–09:45 volume / its prior-20-day mean |
+| | first-bar range / 09:30–09:45 range |
+| | size of the signal move: \|close 09:40 − open 09:30\| / 1R |
+| | body ratio of the window: \|close − open\| / (high − low) |
+| market | SPY return 09:30–09:45, × side |
+| | sector ETF return 09:30–09:45, × side. Sector ETF = the one of XLK, XLF, XLE, XLV, XLY, XLP, XLI, XLU, XLB, XLRE, XLC, SMH most correlated with the stock over the prior 60 days |
+| | residual move: stock return − beta × SPY return, 09:30–09:45, × side (beta from prior 60 days) |
+| | breadth: share of the day's pool above their own 09:30 open at 09:45 |
+| | VIXY return, prior close → 09:45 |
+| regime | stock ATR14 / ATR100 |
+| | SPY 20-day realised volatility |
+| | 20-day return of the stock, × side |
+| location | distance to prior-day high and to prior-day low, / ATR |
+| | room to the next level in the trade direction, in R — nearest of PDH, PDL, pre-market high, pre-market low |
+| | NR7 (yesterday's range narrowest of 7), inside day |
+| name | log price; rank in the day's pool |
+| calendar | day of week; month-end; monthly options expiration; FOMC, CPI and NFP days |
+
+**Calendar dates** (FOMC, CPI, NFP) come from public schedules committed as a
+file before step 3. If that file is not committed before step 3, these three are
+dropped — decided now, not after seeing results.
+
+**Earnings** are excluded. If a point-in-time earnings calendar is bought, it
+enters by dated amendment before step 3, never after.
+
+**Prior interactions**, the only ones allowed in step 3: gap × SPY-aligned,
+opening relative volume × SPY-aligned, room-to-level × signal size.
+
+Every feature gets a timestamp audit: a test that fails if its computation reads
+any bar stamped 09:45 or later.
+
+## Validation
+
+Walk-forward over development only. Train on everything before a 6-month test
+block, purge 2 sessions at the boundary, predict the block. Test blocks:
+2022-07 → 2025-03 (five full blocks and one quarter), about **690 sessions** of
+out-of-sample predictions. The first 18 months are training only.
+
+Standard errors are clustered by session throughout.
+
+## The steps, and where each can stop
+
+**Step 3 — descriptive, no verdict.** Ridge regression on standardised features
+for `y`, and separately for the efficiency ratio. Report out-of-sample R², and
+coefficient signs and sizes. The question is whether features predict
+*magnitude* (efficiency ratio), *direction persistence* (`y`), both or neither.
+
+**Step 4 — the economic gate.** Pool the out-of-sample predictions of `y`, sort
+name-days into quintiles, and measure each quintile's net R at 3bp.
+
+- **PASS** if the top quintile's net R has a 95% session-clustered CI entirely
+  above zero **and** top minus bottom is positive with t > 2.
+- Otherwise **STOP**. Report the null. No boosting, no distillation, and the
+  holdout stays sealed for a future question.
+
+For calibration, not as a threshold: the top quintile holds about 13,800
+name-days over ~690 sessions, giving an SE near 0.011R, so it must gross about
+**0.045R** to pass at 3bp. The unconditional momentum entry in E18 grossed about
+0.019R on a different risk unit — selection must roughly double it.
+
+Also reported: within-session quintiles (removes day-level timing), and how
+concentrated the top quintile is in a few sessions.
+
+**Step 5 — only if step 4 passes.** Gradient boosting (shallow, heavily
+regularised, monotone constraints only where this file states a prior),
+walk-forward as above. Distil to a depth-2 or depth-3 tree read as two or three
+rules. The rule must keep at least half the boosted model's top-quintile lift out
+of sample, or it is too diffuse to trade as rules and the study reports that.
+
+Then the holdout, **once**, on the distilled rule:
+
+| verdict | holdout net R at 3bp |
+|---|---|
+| **WORKS** | > 0, session-clustered 95% CI excludes zero |
+| **AMBIGUOUS** | > 0, CI includes zero |
+| **DEAD** | ≤ 0 |
+
+6bp reported alongside. The rule is not re-tuned after the holdout is read.
+
+**Futures replication.** The distilled rule's day-level conditions, applied to ES
+and NQ with the same entry, risk unit and exits, over the full sample. Reported
+as a replication; no separate threshold. Run as soon as a rule exists, since
+futures remove the spread-estimation problem.
+
+## The forward test
+
+The rule is evaluated again on the first six months of data after 2026-09-21,
+fetched after this commit. That is the only test no part of this project has
+touched.
+
+## Known limitations, stated in advance
+
+- **Effective sample** is ~1,055 sessions, not ~100,000 trades. Market-wide days
+  move many names together.
+- **Costs are flat.** A name- and time-varying spread cannot be estimated
+  reliably from 5-minute OHLC at the open. Conditions that raise the edge (high
+  volatility, low price) may also raise the true cost; this study cannot see
+  that, which is one more reason for the futures replication.
+- **The risk unit is one choice.** Whether a level should set the stop instead of
+  the direction is a separate question for a separate registration.
+
+## Amendments
+
+*None.*

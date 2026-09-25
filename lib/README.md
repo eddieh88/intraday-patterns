@@ -8,6 +8,7 @@ every experiment sees the same definition of a level, a break and a retest.
 | `intraday_levels.py` | Prior-day and pre-market S/R, breaks and retests. Holds `MIN_GAP`, `MIN_ADV`, `RWIN` — the separation and advance rules that fixed the error where 73% of "retests" were the next bar. |
 | `setups_v2.py` | Horizontal-level breaks and trendline breaks, analysed **separately** — conflating them was the earlier mistake. |
 | `swing_levels.py` | Support/resistance from swing points, the way levels are actually drawn. |
+| `holdout.py` | Seals 2025-04-01 onward for `prereg/selection.md`. Load data through `development()`; reading the holdout needs `HOLDOUT_UNLOCK=final-evaluation`, once. |
 | `r_multiple.py` | Evaluates setups as 1R:3R bracket trades rather than fixed-horizon returns. |
 
 Changing anything here changes every experiment. `MIN_GAP` and `MIN_ADV` in

@@ -8,6 +8,7 @@ flattering.
 |---|---|
 | `orb.md` | Run. E7 returned +0.009R against a +0.05 threshold. |
 | `bos_fvg.md` | Run. E13 returned −0.109R against random's −0.121R. |
+| **`selection.md`** | **Registered 2026-09-25, not yet run.** Which name-days, visible at 09:45, make a pattern-free momentum entry pay after costs. Holdout enforced by `lib/holdout.py`. |
 | **`ifvg.md`** | **Written, never run.** Inverse fair value gaps on futures, specified against expert review of the geometry. |
 
 Only some of this project was pre-registered, and the rest is exploratory. That
