@@ -44,8 +44,10 @@ Most anomalies have attenuated; returns roughly **halved after decimalization**,
 with the decline tied to hedge fund AUM, short interest and turnover.
 
 Together with **McLean & Pontiff (2016)** on ~58% post-publication decay, this is
-our Step 3: a 209-characteristic composite netting +0.24, inside its own null,
-with +0.20 of that coming from sign alignment chosen in-sample.
+our Step 3: a 209-characteristic composite netting +0.04 with each signal in its
+published direction, inside its own null. (An earlier version said +0.24, with
++0.20 from sign alignment; the two arms had been swapped. Ignoring direction
+scored +0.24 and is also inside its null.)
 
 ## One paper that sits in tension with our stock-level result
 
