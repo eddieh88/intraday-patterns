@@ -133,6 +133,54 @@ a long-only design.
 **This supersedes E10 and E10b.** Intraday entries carry no directional
 information beyond market drift.
 
+## E10e — TWO ERRORS CORRECTED, and the ordering flips
+
+A practitioner review found two errors in E10c/E10d.
+
+**Error A: the wrong column was read as the edge.** With edge `e` and drift `d`,
+a mirrored pair gives `long ~ e+d` and `short ~ e-d`. So:
+
+    L - S  ~ 2d      cancels the EDGE, measures the DRIFT
+   (L + S)/2 ~ e     cancels the DRIFT, measures the EDGE
+
+E10c/E10d reported **L-S** as the edge statistic. It is the drift statistic. The
+symmetric design was built to isolate drift and then the drift column was read
+as though it were signal.
+
+**Error B: the universe was not point-in-time.** Names were ranked on dollar
+volume summed over the whole 2021-2026 period, which selects the ones that
+became heavily traded *because they ran* — the same bug as Step 9's 19pp/yr
+leak. Now: trailing 20-session dollar volume, known before each session, giving
+200 distinct names across 1,425 sessions rather than 100 fixed.
+
+| entry | long R | short R | **(L+S)/2 = edge** | clustered t | excess over random | t |
+|---|---|---|---|---|---|---|
+| pullback | +0.008 | -0.008 | **+0.0001** | +0.01 | +0.0128 | +1.94 |
+| VWAP | +0.009 | -0.013 | **-0.0018** | -0.39 | +0.0109 | +1.90 |
+| ORB | +0.005 | -0.009 | **-0.0019** | -0.21 | +0.0108 | +1.10 |
+| level | +0.005 | -0.021 | **-0.0085** | -1.08 | +0.0042 | +0.50 |
+| **random** | -0.003 | -0.022 | **-0.0127** | -3.82 | baseline | — |
+
+ICC estimated from the data: **0.0090** over 1,425 session clusters.
+**Minimum detectable edge at 80% power: ~0.0132R.**
+
+**All four entries beat random**, reversing the earlier conclusion. But:
+
+1. **Nothing is significant** — best is t=1.94.
+2. **The study is underpowered for these effect sizes.** MDE 0.0132R against a
+   largest observed excess of 0.0128R. A small real edge and noise are not
+   separable here. The earlier "p > 0.42, nothing beats random" reported a null
+   without establishing what a null could mean.
+3. **Random's -0.0127R is the cost drag.** 1bp on a 0.72% risk unit is 1.4% of
+   R = -0.014R. Entries beating random by ~0.012 therefore land at **zero**,
+   not positive — they recover the cost and no more. At a realistic 3-6bp
+   all-in the drag is -0.042 to -0.084R and none of them approach it.
+
+**The conclusion is no longer "entries carry no information."** It is: *any edge
+present is below our detection threshold and below realistic costs.*
+
+**Supersedes E10, E10b, E10c and E10d.**
+
 ## Limitations — all of them
 
 1. **Only E7 was pre-registered.** E1-E6 had thresholds chosen while looking at
