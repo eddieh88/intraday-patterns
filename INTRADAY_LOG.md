@@ -84,6 +84,31 @@ The chart-pattern entry (`level retest`) is *worse* than random.
 
 This supersedes E10 and is the definitive result of the intraday series.
 
+## E10c — the definitive result: symmetric long/short
+
+E10b was **long-only**, so its slightly positive gross was market drift leaking
+in, not entry quality. Giving every entry a short form makes drift cancel in
+the long-minus-short spread.
+
+| entry | n long | long R | n short | short R | L-S spread | excess over drift | p |
+|---|---|---|---|---|---|---|---|
+| **random** | 121,515 | -0.003 | 121,511 | -0.023 | **+0.0195** (t=3.63) | — (this IS the drift) | — |
+| ORB | 46,683 | +0.010 | 46,006 | -0.010 | +0.0202 | +0.0007 | 0.938 |
+| level | 28,727 | -0.001 | 29,303 | -0.023 | +0.0219 | +0.0024 | 0.834 |
+| VWAP | 87,669 | +0.009 | 87,682 | -0.016 | +0.0254 | +0.0059 | 0.451 |
+| pullback | 82,812 | +0.011 | 82,104 | -0.015 | +0.0260 | +0.0065 | 0.425 |
+
+**Drift is real and measurable: +0.0195R per long-short pair, t=3.63.** No entry
+adds anything beyond it -- every p > 0.42, before any correction. The best
+excess, +0.007R on a 0.7% risk unit, is 0.5bp of price: below one tick.
+
+In E10b the same `pullback` arm looked like +0.010R at t=2.31 and needed a
+Bonferroni correction to dismiss. That apparent edge was drift entering through
+a long-only design.
+
+**This supersedes E10 and E10b.** Intraday entries carry no directional
+information beyond market drift.
+
 ## Limitations — all of them
 
 1. **Only E7 was pre-registered.** E1-E6 had thresholds chosen while looking at
