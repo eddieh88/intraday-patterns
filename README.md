@@ -5,9 +5,10 @@ breakout of the opening range, wait for price to break a level and come back to
 "retest" it, trade "fair value gaps", watch for the "judas swing" at the open.
 They're taught as if they work.
 
-We turned each one into an exact rule and tested it on **1,425 trading days of
-5-minute bars (2021–2026)**, using each day's 100 most-traded US stocks — about
-200 different companies over the whole period.
+We turned each one into an exact rule and tested it on **1,435 trading days of
+5-minute bars (2021–2026)**, using each day's 100 most-traded US stocks, chosen
+from the previous 20 days' volume only — 439 different companies over the whole
+period, including ones that were later delisted.
 
 ## The short version
 
@@ -18,7 +19,7 @@ We turned each one into an exact rule and tested it on **1,425 trading days of
   reverses 50.5% of the time — a coin flip. Pre-market direction predicts the
   day 49.2% of the time. Also a coin flip.
 - **The entry setups pick the right direction slightly more often than chance**
-  — worth about **1–2 hundredths of a percent** per trade. Trading costs are
+  — worth about **1–2 hundredths of a percent** per trade, before costs. Trading costs are
   3–6 hundredths. So none of it is profitable.
 - **And that small edge isn't coming from the pattern.** A rule that ignores the
   chart and just asks "has price gone up or down over the last 30 minutes?"
@@ -78,14 +79,21 @@ comparison turned out to be subtly unfair:
   which flattered the setups for reasons that had nothing to do with skill.
 - Our random comparison trades were sometimes drawn from **before** the setup
   fired, so they caught the very move that created the setup.
+- **The list of stocks was picked with hindsight.** "Most traded" was first
+  measured over the whole five years, so a stock that only became popular in
+  2024 was already on the 2021 list. On a typical day about one name in ten
+  was wrong. Rebuilt using only each day's past volume, every result moved by
+  less than 0.003R and every conclusion held.
 
 The final design pairs each real trade with a random entry in the same stock,
-same day, same direction, same risk, a few bars later.
+same day, same direction, same risk, a few bars later. Entries are filled at the
+**open of the next bar** — the first price you could actually trade at after
+seeing the signal.
 
 ### 5. The answer: right direction, no timing, too small to pay
 
 With a fair comparison, the setups do pick the right **direction** a little more
-often than chance — worth **0.7 to 1.9 hundredths of a percent**. After
+often than chance — worth **0.7 to 2.1 hundredths of a percent**. After
 correcting for testing four setups at once, only one (the pullback) is
 convincingly above zero.
 
@@ -98,14 +106,15 @@ are 3–6 hundredths of a percent, well above the edge.
 If the setup picks direction but not timing, maybe it's only telling you which
 way price has already been moving. So we compared each setup against a rule
 that ignores the chart entirely — same entry bar, same stop, same target, but go
-long if price is up over the last 30 minutes and short if it's down.
+long if price is up over the last 30 minutes and short if it's down. Both are
+measured on exactly the same trades.
 
 | setup | setup's result | momentum rule | difference |
 |---|---|---|---|
-| pullback after a run | +0.0210R | +0.0183R | +0.006 (not significant) |
-| opening range breakout | +0.0198R | +0.0198R | **exactly 0** |
-| VWAP reclaim | +0.0148R | +0.0215R | −0.003 (not significant) |
-| break and retest of a level | +0.0086R | +0.0084R | +0.004 (not significant) |
+| pullback after a run | +0.0249R | +0.0189R | +0.0060 (not significant) |
+| opening range breakout | +0.0188R | +0.0188R | **exactly 0** |
+| VWAP reclaim | +0.0210R | +0.0207R | +0.0003 (not significant) |
+| break and retest of a level | +0.0129R | +0.0077R | +0.0052 (not significant) |
 
 **No setup beats the momentum rule.** The opening range breakout is exactly
 equal on every single trade, because an upward break of the opening range *is*
@@ -171,7 +180,8 @@ Run from the repository root:
 ```bash
 pip install -r requirements.txt
 python3 data/mp5_fetch.py              # download the 5-minute archive
-python3 data/build_daily.py            # build the shared daily table
+python3 data/build_daily.py            # build the shared daily table and the universe
+python3 data/universe_check.py         # fails if the universe ever uses future data
 python3 experiments/e18_momentum.py    # the momentum comparison
 ```
 

@@ -22,10 +22,18 @@ import pandas as pd, numpy as np, glob, sys, time
 sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 COST_BP, MAXB, K, CAP = 0.0, 60, 12, 3
+# FILL=close enters at the close of the bar that produced the signal -- the bar
+# whose close the signal itself needs, so it is mildly optimistic. FILL=next
+# enters at the following bar's open, which is tradeable.
+#   python3 experiments/e18_momentum.py          # close
+#   python3 experiments/e18_momentum.py next     # next-bar open
+FILL = sys.argv[1] if len(sys.argv) > 1 else "close"
+assert FILL in ("close", "next"), FILL
 rng=np.random.default_rng(0)
 
 def trade(o,h,l,c,e,up,risk):
-    entry=c[e]
+    entry=c[e] if FILL=="close" else o[e+1]   # bar e+1 is then checked in full: its range
+                                              # all happens after its open
     if risk<=0 or risk/entry<0.0003: return None
     stop=entry-risk if up else entry+risk
     tgt=entry+3*risk if up else entry-3*risk
@@ -39,12 +47,11 @@ def trade(o,h,l,c,e,up,risk):
             if l[j]<=tgt:  return (entry-min(tgt,o[j])-cost)/risk
     return (((c[end-1]-entry) if up else (entry-c[end-1]))-cost)/risk
 
-D=pd.read_parquet("cache/intraday_daily.parquet").sort_values(["symbol","date"])
-D["dv"]=D.c_rth*D.v_rth
-D["dv20"]=D.groupby("symbol").dv.transform(lambda x:x.shift(1).rolling(20,min_periods=10).mean())
-D=D.dropna(subset=["dv20"]); D["rk"]=D.groupby("date").dv20.rank(ascending=False,method="first")
+# The point-in-time universe comes from ONE place: data/build_daily.py ranks every
+# name on its prior 20 sessions of RTH dollar volume. Top 100 per day.
+P=pd.read_parquet("cache/intraday_pool.parquet")
 PIT={}
-for r in D[D.rk<=100].itertuples(): PIT.setdefault(r.date,set()).add(r.symbol)
+for r in P[P.rk<=100].itertuples(): PIT.setdefault(pd.Timestamp(r.date),set()).add(r.symbol)
 allnames=set().union(*PIT.values())
 files=sorted(glob.glob("cache/mp5min/*.parquet"))[::2]
 print(f"{len(files)} sessions",flush=True)
@@ -93,12 +100,12 @@ for i,(s,dt,g) in enumerate(session_frames(files,allnames)):
             rows.append(rec)
     if i%25000==0 and i: print(f"  {i:,} sessions, {len(rows):,}, {time.time()-t0:.0f}s",flush=True)
 
-T=pd.DataFrame(rows); T.to_parquet("cache/e18_momentum.parquet",index=False)
+T=pd.DataFrame(rows); T.to_parquet(f"cache/e18_momentum_{FILL}.parquet",index=False)
 def cl(x,by):
     x=np.asarray(x,float); m=np.nanmean(x)
     sm=pd.DataFrame({"x":x,"g":by}).dropna().groupby("g").x.mean()
     se=sm.std(ddof=1)/np.sqrt(len(sm)); return m,se,m/se
-print(f"\n{len(T):,} signals, GROSS  ({time.time()-t0:.0f}s)\n")
+print(f"\n{len(T):,} signals, GROSS, fill={FILL}  ({time.time()-t0:.0f}s)\n")
 print("(a) RECONCILIATION -- does candidate-count weighting explain the gap?")
 o_=T[T.entry=="ORB"]
 m,se,t=cl(o_.sig.values,o_.date.values)

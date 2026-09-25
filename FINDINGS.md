@@ -312,6 +312,81 @@ ordering.
 
 **Supersedes E10e for the entry-comparison claim.**
 
+## Correction — the universe used future volume
+
+Found 2026-09-25, while preparing a selection model that would have made it fatal.
+
+### What was wrong
+
+`build_daily.py` chose its 200 candidate names by dollar volume **summed over all
+of 2021–2026**. The E10e fix made the daily top-100 point-in-time *within* that
+pool, but the pool itself was picked with hindsight: a stock that only became
+heavily traded in 2024 was already a candidate in 2021, because of what it did
+later. It is error 01 one level up.
+
+Two further data faults surfaced while fixing it:
+
+- **Holiday files.** The vendor writes a file for each US market holiday holding
+  a handful of symbols. 27 of them were being read as sessions.
+- **Ticker reuse.** Every script stripped the `-DELISTED` suffix. Where a dead
+  company's ticker was reused, that merged two companies into one price series —
+  on the same day, for FISV. The suffix is now kept; it identifies the company.
+
+### The fix, and the test that guards it
+
+Each day's pool is now ranked on the mean RTH dollar volume of the **prior 20
+market sessions** only, holidays dropped, suffix kept. `cache/intraday_pool.parquet`
+records who was eligible each day, and E17/E18 read their top-100 from it, so the
+rule lives in one place.
+
+`data/universe_check.py` rebuilds the pool independently, from raw files
+truncated at the day before, on six dates, and requires an exact match: 150/150
+on all six. It also requires early pools to contain later-delisted names (18 of
+230 in the first 90 days: ATVI, BBBY, CCIV, DISCA…).
+
+### How wrong the old pool was
+
+| | |
+|---|---|
+| overlap, old daily top-100 vs true daily top-100 | **90.6%** mean; 85.8% first year; 73% worst day |
+| names in a true daily top-100 at some point | **439**, against the old pool's 200 |
+| old candidates first eligible a year or more in | **34** of 200 — APP, ANET, DELL, BE, CMG… |
+
+### Rerun on the corrected universe
+
+E17 — direction, gross, stop-first:
+
+| entry | old pool | corrected | t |
+|---|---|---|---|
+| pullback | +0.0213 | **+0.0228** | +2.96 |
+| ORB | +0.0198 | +0.0177 | +1.36 |
+| VWAP | +0.0152 | +0.0160 | +2.27 |
+| level | +0.0075 | +0.0077 | +0.69 |
+
+Timing is still zero on all four (pullback closest, t = 1.87). Relative volume
+still carries no ordering. Only pullback clears Bonferroni's 2.50.
+
+E18 — setup vs momentum (k=6), **on the same trades** (those with six prior
+bars), 1,435 sessions of which every second is used:
+
+| entry | n | setup, next open | momentum, next open | **diff** | t | diff, signal close | t |
+|---|---|---|---|---|---|---|---|
+| pullback | 190,584 | +0.0249 | +0.0189 | **+0.0060** | +0.93 | +0.0071 | +1.10 |
+| ORB | 48,771 | +0.0188 | +0.0188 | **0.0000** | — | 0.0000 | — |
+| VWAP | 121,664 | +0.0210 | +0.0207 | **+0.0003** | +0.07 | −0.0009 | −0.19 |
+| level | 21,983 | +0.0129 | +0.0077 | **+0.0052** | +0.45 | +0.0031 | +0.27 |
+
+**Every conclusion holds.** Every figure moved by less than 0.003R. And the
+next-bar fill, which is the tradeable one, does not cost the edge — the concern
+that it lived in the first bar after the signal is not borne out.
+
+The paired table replaces an earlier one whose columns did not subtract: the
+difference was paired on trades with six prior bars, while each column averaged
+over all trades.
+
+**Not rerun:** E1–E13. They are marked pre-fix, and E2–E5 report percentages
+rather than R, but they were measured on the hindsight pool.
+
 ## Limitations — all of them
 
 1. **Only E7 was pre-registered.** E1-E6 had thresholds chosen while looking at
@@ -350,3 +425,6 @@ ordering.
    series is far larger than four.
 13. **No news calendar.** One tested strategy says explicitly: never trade
    during news, only after. We cannot filter on that at all.
+14. **E1–E13 used a hindsight-selected universe** (see the correction above).
+   E17 and E18 were rerun on the point-in-time universe and did not change; the
+   earlier experiments were not.

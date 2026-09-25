@@ -44,10 +44,12 @@ D["dv20"]=D.groupby("symbol").dv.transform(lambda x:x.shift(1).rolling(20,min_pe
 D["orv14"]=D.groupby("symbol").v_or.transform(lambda x:x.shift(1).rolling(14,min_periods=7).mean())
 D=D.dropna(subset=["dv20","orv14"])
 D["relvol"]=D.v_or/D.orv14
-D["rk"]=D.groupby("date").dv20.rank(ascending=False,method="first")
+# Universe from ONE place: data/build_daily.py's point-in-time pool, top 100 per day.
+P=pd.read_parquet("cache/intraday_pool.parquet")
+P=P[P.rk<=100].merge(D[["symbol","date","relvol"]], on=["symbol","date"], how="inner")
 PIT={}; RV={}
-for r in D[D.rk<=100].itertuples():
-    PIT.setdefault(r.date,set()).add(r.symbol); RV[(r.symbol,r.date)]=r.relvol
+for r in P.itertuples():
+    PIT.setdefault(pd.Timestamp(r.date),set()).add(r.symbol); RV[(r.symbol,pd.Timestamp(r.date))]=r.relvol
 allnames=set().union(*PIT.values())
 files=sorted(glob.glob("cache/mp5min/*.parquet"))[::2]
 print(f"{len(allnames)} names, {len(files)} sessions (every 2nd)",flush=True)

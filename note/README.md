@@ -9,3 +9,9 @@ verdict on our rule rather than on the read it was meant to mechanise.
 Published at https://claude.ai/artifact/P7HXLAxZiBZ8hKjCfxw1cx (revision 8).
 
 Open the file locally in any browser; it needs nothing.
+
+**It predates a correction.** The note's numbers were measured on a universe
+picked with hindsight, and its figures have since been rerun
+on a point-in-time universe (see `FINDINGS.md`). Every conclusion held and every
+figure moved by less than 0.003R, but the numbers in the note are not the
+current ones.

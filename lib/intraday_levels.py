@@ -22,7 +22,7 @@ def session_frames(files, symbols):
     """yield (symbol, date, DataFrame of that day's 5-min bars incl. pre-market)"""
     for f in files:
         d = pd.read_parquet(f, columns=["timestamp","symbol","open","high","low","close","volume"])
-        d["symbol"] = d.symbol.str.replace("-DELISTED","",regex=False)
+        # -DELISTED is kept: it identifies a dead company whose ticker was later reused.
         d = d[d.symbol.isin(symbols)]
         if not len(d): continue
         t = pd.to_datetime(d.timestamp)
