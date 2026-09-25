@@ -255,3 +255,44 @@ or trade result exists.
 | replacing a day's end-of-day fields and all later data with noise leaves that day's features unchanged | pass, 6 dates |
 | **the audit can fail:** removing one `.shift(1)` is caught | caught on 6/6 dates, 6 features flagged |
 | holdout sealed | last date 2025-03-31 |
+
+### Amendment 3 — 2026-09-25, before any outcome was computed
+
+**Dropped from this study, deferred to a later one: CPI and NFP days, and
+earnings.** Neither data source is in hand. Both are to be looked into later,
+but not added to this study after step 3 — that would be choosing features with
+the results visible. A follow-up that uses them needs its own registration, and
+since this study's holdout may by then have been read, its clean test is the
+forward period (data after 2026-09-21).
+
+**How outcomes are built from bars** (`selection/outcomes.py`):
+
+- A name-day needs the 09:45 bar and the 10:55 bar; otherwise it is dropped and
+  counted.
+- Name-days with 1R under 10bp are dropped — 30 of 104,902, degenerate windows
+  where any cost in R explodes.
+- The bracket is checked on each bar from 09:45 through 10:55. A stop or target
+  gapped through fills at the bar's open, as in E6–E18. Stop first on a tie.
+- `y` = side × (10:55 close − 09:45 open) / 1R — the unbracketed trade.
+- Efficiency ratio = |10:55 close − 09:45 open| / sum of |bar-to-bar close
+  changes|, the first change measured from the 09:45 open.
+- Net R: (a) 3bp × fill ÷ that trade's 1R; (b) a flat 0.023R; 6bp under (a) also
+  reported.
+
+**Step 3 in detail:**
+
+- Features: the registered list less the dropped items; day of week as four
+  dummies; the three registered interactions. Each fold winsorises every
+  feature at its *training* 1st/99th percentiles, then standardises with
+  training mean and SD.
+- `y` and the efficiency ratio are winsorised at the training 1st/99th
+  percentiles for fitting and for R². `y` has heavy tails, because a narrow
+  window makes 1R small.
+- Ridge penalty: chosen inside each training set only — fit on all but its last
+  six months, score on those six months, over α ∈ {1, 10, 100, 1,000, 10,000};
+  then refit on the full training set with the chosen α.
+- Reported: pooled and per-block out-of-sample R², measured against the training
+  mean; Spearman rank correlation of prediction with outcome; the slope of the
+  outcome on the prediction with session-clustered t; and coefficient signs,
+  sizes and sign-consistency across folds.
+- Step 4 ranks on these same ridge predictions of `y`.
