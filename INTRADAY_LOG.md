@@ -63,6 +63,27 @@ E6-E13, and the framing "every strategy loses 0.1R", which was wrong. The
 correct framing is "no strategy has gross edge, and the cost model then
 subtracted a constant that depended on my stop width."
 
+## E10b — the corrected entry comparison
+
+2-bar stop, 1bp round trip, friction ~-0.017R instead of -0.135R:
+
+| entry | n | mean R | vs random | t(diff) | p |
+|---|---|---|---|---|---|
+| **random** | 139,740 | **-0.002** (t=-0.51) | — | — | — |
+| level retest | 35,232 | -0.005 | -0.003 | -0.38 | 0.706 |
+| ORB | 53,880 | +0.005 | +0.007 | +1.10 | 0.270 |
+| VWAP reclaim | 100,920 | +0.006 | +0.008 | +1.58 | 0.113 |
+| pullback | 93,417 | +0.010 | +0.011 | +2.08 | 0.037 |
+
+Bonferroni threshold for 4 comparisons: p < 0.0125.
+
+**Random entry is exactly zero**, which validates the simulation -- a random
+bracket on a near-efficient series should earn nothing, and it does. No entry
+beats it: the best, `pullback`, fails Bonferroni and is +0.011R regardless.
+The chart-pattern entry (`level retest`) is *worse* than random.
+
+This supersedes E10 and is the definitive result of the intraday series.
+
 ## Limitations — all of them
 
 1. **Only E7 was pre-registered.** E1-E6 had thresholds chosen while looking at
