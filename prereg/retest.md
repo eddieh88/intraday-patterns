@@ -108,4 +108,56 @@ price does.
 
 ## Amendments
 
-*None.*
+### Amendment 1 — 2026-09-25, after the random-walk check, before any real data
+
+**The random-walk check failed the registered outcome, as it was built to.** On
+simulated driftless walks, where levels mean nothing, the outcome measured from
+the level price showed a mechanical pass-through:
+
+| steps per bar | real | fake | real − fake |
+|---|---|---|---|
+| 10 (6,000 paths) | −0.0119, t −5.3 | −0.0195, t −7.6 | **+0.0076, t +2.23** |
+| 100 (6,000 paths) | −0.0056, t −2.6 | −0.0024, t −1.0 | −0.0032, t −1.0 |
+
+The cause is **crossing overshoot**: a path observed in steps is first seen
+beyond a level, never exactly on it, so scoring from the level price counts the
+overshoot as pass-through. It shrinks with resolution by about √10 per tenfold
+more steps, as it should. Worse, the fake-level control did not cancel it: at
+coarse resolution real minus fake passed the primary test (t = 2.23) on pure
+noise, in the direction the hypothesis predicts. Real data lies at an unknown
+resolution between these, so this outcome cannot carry the primary test.
+
+**Changes:**
+
+1. **The primary outcome is now measured from the touching bar's close:**
+   `a_k = side × (close k bars after the touching bar − close of the touching bar) / ATR14`,
+   positive = held, k = 12 primary, 6 secondary. The retest is identified using
+   data up to that close, and a random walk's later moves are independent of it,
+   so this outcome is unbiased at any resolution. It is also what a trader who
+   waits for the touching bar to close would earn.
+2. **The registration's argument against this was wrong.** What is biased is
+   scoring the touching bar's *own* close against the level. Scoring the move
+   *after* that close is not.
+3. **What it gives up:** any bounce completed inside the touching bar itself.
+   A level acting as a barrier should keep showing up after the bar closes.
+4. **The from-level outcome** is kept as a secondary, reported only as real −
+   fake, with the caveat above.
+5. **The strengthening comparison** — does a level hold better on the retest
+   than on the first touch — is measured as (real retest − fake retest) −
+   (real first touch − fake first touch), using the primary outcome, so any
+   remaining mechanics cancel.
+
+**The random-walk check on the new primary outcome passes:**
+
+| steps per bar | paths | seed | real | fake | real − fake |
+|---|---|---|---|---|---|
+| 100 | 6,000 | 11 | −0.0011, t −0.5 | +0.0016, t +0.7 | −0.0028, t −0.9 |
+| 10 | 12,000 | 12 | −0.0023, t −1.5 | +0.0012, t +0.7 | −0.0035, t −1.5 |
+| 10 | 12,000 | 13 | −0.0007, t −0.5 | −0.0022, t −1.3 | +0.0015, t +0.7 |
+
+A first run at 10 steps with seed 11 showed the fake level at t −2.10 and real −
+fake at t 1.93. It did not reproduce on two fresh seeds with twice the paths, and
+the outcome is unbiased by construction, so it is recorded as chance. It is
+reported here because it was seen.
+
+The primary test is otherwise unchanged: real minus fake, t > 1.96.
