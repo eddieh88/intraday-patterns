@@ -139,6 +139,23 @@ better; it chose to stop after one to nine trees, having found nothing to learn.
 The best-rated fifth of mornings lost money after costs under both models.
 Details in [selection/RESULTS.md](selection/RESULTS.md).
 
+### 8. Do levels hold on the retest?
+
+A common version of the support/resistance claim: price hits a level, moves
+away, and when it comes back — from either side — it bounces. We tested it on
+prior-day, two-days-back and pre-market highs and lows, against a **fake level**
+at the same distance from the open run through identical code.
+
+Before touching real data, the detector ran on simulated random walks, where
+levels mean nothing. That caught a flaw: measuring from the level price
+manufactured a pass-through, and even made a fake result look significant. The
+outcome was changed before any real data was read.
+
+**They don't.** Across 187,000 retests, real levels held 50.2% of the time and
+fake ones 50.3%. The difference is +0.24bp over the next hour, with a 95%
+interval of −0.35 to +0.84bp. No level type, and neither support nor
+resistance, stands out. Details in [retest/RESULTS.md](retest/RESULTS.md).
+
 ## One pattern claim did check out
 
 **Fair value gaps fill at roughly the rates people say they do.**
@@ -176,6 +193,7 @@ artificial penalty — the comparison between them is what counts.
 | [note/open-tests.html](note/) | The same story written for an experienced day trader, definitions first |
 | [figures/](figures/) | Charts per experiment, and rendered examples of what the detector found |
 | [selection/](selection/) | The 09:45 selection study: features, leak audit, results |
+| [retest/](retest/) | Do levels hold on the retest: detector, random-walk check, results |
 | [prereg/](prereg/) | Rules written before the tests — one (inverse fair value gaps) not yet run |
 | [lib/](lib/), [data/](data/), [render/](render/), [diagnostics/](diagnostics/) | Shared code, data download, chart rendering, one-off checks — each with its own README |
 
