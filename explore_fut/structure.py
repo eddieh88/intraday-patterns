@@ -8,11 +8,12 @@ York time (the missing hour is the 17:00 CME break).
              In an uptrend only a close below the protected low (the low that
              launched the last bullish impulse) flips the trend; smaller breaks are
              internal structure and ignored. Mirror for downtrends.
-  zone     : on 30-minute bars inside that impulse, the last opposite-colour candle
-             whose next candles left an unfilled gap (the 3-candle imbalance) and
-             which price has not revisited by the break
-  trade    : limit at the zone's near edge, filled on EVERY touch (5-minute bars),
-             stop 1 tick beyond the zone's far edge, target the impulse extreme at
+  zone     : the BASE of the impulse on 30-minute bars -- the candle at its swing
+             extreme plus the one before, boxed from the extreme to the top of their
+             bodies; valid if the move away left a 3-candle imbalance and price has
+             not come back into the box by the break
+  trade    : limit at the box's near edge, filled on EVERY touch (5-minute bars),
+             stop 1 tick beyond the swing extreme, target the impulse extreme at
              fill time; valid until the trend flips or 5 days pass; 10-day limit
   cost     : 2 ticks round trip
 
@@ -66,17 +67,39 @@ def structure(h1):
     return ev
 
 def zone(m30, t_from, t_to, side):
-    """last opposite-colour 30m candle in [t_from, t_to] with a 3-candle imbalance after it,
-    not revisited before t_to."""
+    """The BASE of the impulse, as in his charts: the 30-minute candle at the impulse's
+    extreme (the swing low for a long) plus the candle before it. Box = from that
+    extreme to the top of those candles' bodies. Valid only if the move away left a
+    3-candle imbalance within the next 3 candles and price has not come back into the
+    box by the break. -> (base time, (near edge, far edge)) or None"""
     w = m30.loc[t_from:t_to]
+    if len(w) < 4: return None
     o, h, l, c = w.open.values, w.high.values, w.low.values, w.close.values
-    for z in range(len(w) - 3, -1, -1):
-        opp = c[z] < o[z] if side > 0 else c[z] > o[z]
-        gap = (l[z + 2] > h[z]) if side > 0 else (h[z + 2] < l[z])
-        untouched = (l[z + 2:].min() > h[z]) if side > 0 else (h[z + 2:].max() < l[z])   # from the gap candle on
-        if opp and gap and untouched:
-            return w.index[z], (h[z], l[z]) if side > 0 else (l[z], h[z])   # (near edge, far edge)
-    return None
+    k = int(np.argmin(l)) if side > 0 else int(np.argmax(h))            # the swing extreme
+    if k + 3 >= len(w): return None
+    base = [x for x in (k - 1, k) if x >= 0]
+    if side > 0:
+        near, far = max(max(o[x], c[x]) for x in base), l[k]
+        gap = any(l[x + 2] > h[x] for x in range(k, min(k + 3, len(w) - 2)))
+        clean = l[k + 2:].min() > near
+    else:
+        near, far = min(min(o[x], c[x]) for x in base), h[k]
+        gap = any(h[x + 2] < l[x] for x in range(k, min(k + 3, len(w) - 2)))
+        clean = h[k + 2:].max() < near
+    if not (gap and clean and (near - far) * side > 0): return None
+    return w.index[base[0]], (near, far)
+
+def context(h1, j, p, side):
+    """his context marks, recorded for later splits (not filters yet):
+    swept  -- the impulse origin took out the prior 48 hours' extreme and closed back inside
+    cheap  -- the origin sits in the discount half (long) / premium half (short) of the prior 5 days' range"""
+    H, L, C = h1.high.values, h1.low.values, h1.close.values
+    lo48, hi48 = L[max(0, p - 48):p].min() if p > 0 else np.nan, H[max(0, p - 48):p].max() if p > 0 else np.nan
+    swept = (L[p] < lo48 and C[p] > lo48) if side > 0 else (H[p] > hi48 and C[p] < hi48)
+    r_lo, r_hi = L[max(0, p - 120):p + 1].min(), H[max(0, p - 120):p + 1].max()
+    mid = (r_lo + r_hi) / 2
+    cheap = (L[p] < mid) if side > 0 else (H[p] > mid)
+    return bool(swept), bool(cheap)
 
 def main():
     data = load(); print(f"loaded {len(data)} symbols  ({time.time()-t0:.0f}s)", flush=True)
@@ -97,7 +120,7 @@ def main():
             if not touch.any(): rows.append(dict(sym=s, bos=idx1[j], side=side, filled=False)); continue
             ft = touch.idxmax(); fo = after.loc[ft, "open"]
             entry = min(near, fo) if side > 0 else max(near, fo)
-            stop = far - tk if side > 0 else far + tk
+            stop = far - tk if side > 0 else far + tk                  # beyond the swing extreme itself
             R = (entry - stop) * side
             ext = m5.loc[idx1[p]:ft]; target = ext.high.max() if side > 0 else ext.low.min()
             path = m5.loc[ft:ft + pd.Timedelta("10D")]
@@ -107,7 +130,8 @@ def main():
                     px, how, xt = (min(stop, b.open) if side > 0 else max(stop, b.open)), "stop", t_; break
                 if t_ > ft and ((b.high >= target) if side > 0 else (b.low <= target)):
                     px, how, xt = target, "target", t_; break
-            rows.append(dict(sym=s, bos=idx1[j], side=side, filled=True, zone_t=zt, near=near, far=far, fill_t=ft,
+            swept, cheap = context(h1, j, p, side)
+            rows.append(dict(sym=s, bos=idx1[j], side=side, filled=True, zone_t=zt, near=near, far=far, fill_t=ft, swept=swept, cheap=cheap,
                              entry=entry, stop=stop, target=target, R_ticks=R / tk, rr=(target - entry) * side / R,
                              exit_t=xt, how=how, R=((px - entry) * side - 2 * tk) / R, origin=idx1[p], protected=prot, level=lvl))
         print(f"  {s}: {len(ev)} breaks of structure, {sum(1 for r in rows if r['sym']==s and r['filled'])} zone fills  ({time.time()-t0:.0f}s)", flush=True)
