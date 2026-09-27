@@ -69,4 +69,27 @@ A method passes only if it passes on the holdout.
 
 ## Results
 
-(to be filled in after the runs)
+Pre-registration committed in c199ced, then both runs made. Holdout unlocked
+once, on 2026-09-27. R includes all the costs above; ± is a week-clustered
+standard error.
+
+| test | trades | zone R | control R | zone − control | verdict |
+|---|---|---|---|---|---|
+| A, development | 42 | −0.48 | −0.12 | −0.37 ± 0.27 (t −1.4) | **FAIL** |
+| A, holdout | 15 | −0.59 | −0.31 | −0.28 ± 0.35 (t −0.8) | **FAIL** |
+| B, holdout (5–8 bucket) | 29 | −0.54 ± 0.41 | — | — | **FAIL** |
+
+- **The stop floor never bound.** The pullback into the zone runs about 3
+  five-minute ATRs deep on median, so the "refined" stop is not tight. The
+  median planned reward:risk still reaches 4.2 only because the impulse target
+  is far.
+- **The zone does worse than random.** Random entries in the same market, hour
+  and trend direction, with the same stop and target, lost less in both periods.
+- **The 5–8 lead reversed:** +0.60R in development, −0.54R on the holdout. The
+  whole limit-order version made −0.23R on 183 holdout trades, with a 21% hit
+  rate against a 21% break-even rate.
+
+**Verdict:** the mechanical version of the documented method has no edge on
+these five futures markets. The trade counts are small (42 and 15), but every
+point estimate is on the wrong side of the control. What remains untested is
+discretion that these rules cannot capture.

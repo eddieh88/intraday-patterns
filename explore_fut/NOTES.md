@@ -58,3 +58,11 @@ construction. A trend flip (a close beyond the protected level) still cancels.
 
 The width and news filters removed only two trades each. The news calendar
 covers FOMC and payrolls only.
+
+## 3. Refined stop, with a random control, and the holdout
+
+This was pre-registered in `prereg/fut_zone_refined.md`, which has the full
+results. It **failed on both periods.**
+- The zone trades lost 0.28R to 0.37R per trade more than random entries with
+  the same stop and target.
+- The 5–8 lead reversed on the holdout, to −0.54R.
