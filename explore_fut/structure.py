@@ -17,20 +17,25 @@ York time (the missing hour is the 17:00 CME break).
              fill time; valid until the trend flips or 5 days pass; 10-day limit
   cost     : 2 ticks round trip
 
-  python3 explore_fut/structure.py   -> cache/fut_zone_trades.parquet
+  python3 explore_fut/structure.py            -> cache/fut_zone_trades.parquet
+  python3 explore_fut/structure.py holdout    -> cache/fut_zone_trades_holdout.parquet (sealed)
 """
-import pandas as pd, numpy as np, glob, sys, time
+import pandas as pd, numpy as np, glob, sys, time, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from lib.holdout import assert_sealed
 t0 = time.time()
 DEV_END = pd.Timestamp("2025-04-01")
 TICK = {"GC": 0.1, "E6": 0.00005, "B6": 0.0001, "A6": 0.00005, "J1": 0.0000005}
 SYMS = list(TICK)
 
-def load():
+def load(period="dev"):
+    """dev: before 2025-04-01. holdout: from 2025-04-01, sealed unless HOLDOUT_UNLOCK=final-evaluation"""
     rows = []
     for f in sorted(glob.glob("cache/mp_futures_5min/*.parquet")):
-        if pd.Timestamp(f.split("_")[-1][:10]) >= DEV_END: break
+        if (pd.Timestamp(f.split("_")[-1][:10]) >= DEV_END) != (period == "holdout"): continue
         d = pd.read_parquet(f); rows.append(d[d.symbol.isin(SYMS)])
     D = pd.concat(rows); D["ts"] = pd.to_datetime(D.timestamp)
+    if period == "holdout": assert_sealed(D.ts)
     return {s: g.sort_values("ts").set_index("ts")[["open","high","low","close","volume"]] for s, g in D.groupby("symbol")}
 
 def bars(df, rule):
@@ -101,8 +106,8 @@ def context(h1, j, p, side):
     cheap = (L[p] < mid) if side > 0 else (H[p] > mid)
     return bool(swept), bool(cheap)
 
-def main():
-    data = load(); print(f"loaded {len(data)} symbols  ({time.time()-t0:.0f}s)", flush=True)
+def main(period="dev"):
+    data = load(period); print(f"loaded {len(data)} symbols  ({time.time()-t0:.0f}s)", flush=True)
     rows = []
     for s, m5 in data.items():
         tk = TICK[s]; h1, m30 = bars(m5, "1h"), bars(m5, "30min")
@@ -135,10 +140,10 @@ def main():
                              entry=entry, stop=stop, target=target, R_ticks=R / tk, rr=(target - entry) * side / R,
                              exit_t=xt, how=how, R=((px - entry) * side - 2 * tk) / R, origin=idx1[p], protected=prot, level=lvl))
         print(f"  {s}: {len(ev)} breaks of structure, {sum(1 for r in rows if r['sym']==s and r['filled'])} zone fills  ({time.time()-t0:.0f}s)", flush=True)
-    T = pd.DataFrame(rows); T.to_parquet("cache/fut_zone_trades.parquet", index=False)
+    T = pd.DataFrame(rows); T.to_parquet("cache/fut_zone_trades.parquet" if period == "dev" else "cache/fut_zone_trades_holdout.parquet", index=False)
     F = T[T.filled]
     print(f"\n{len(T):,} zones set up, {len(F):,} filled ({len(F)/len(T):.0%})")
     print(f"planned reward:risk at fill: median {F.rr.median():.1f}, share >= 3: {(F.rr >= 3).mean():.0%};  median 1R = {F.R_ticks.median():.0f} ticks")
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1] if len(sys.argv) > 1 else "dev")
