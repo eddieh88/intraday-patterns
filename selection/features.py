@@ -16,7 +16,6 @@ Amendment 2, before any outcome was computed:
   python3 selection/features.py   -> cache/sel_features.parquet
 """
 import pandas as pd, numpy as np, sys
-sys.path.insert(0, "lib")
 from holdout import assert_sealed
 
 SECTORS = ["XLK","XLF","XLE","XLV","XLY","XLP","XLI","XLU","XLB","XLRE","XLC","SMH"]

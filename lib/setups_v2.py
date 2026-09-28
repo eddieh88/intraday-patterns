@@ -16,8 +16,7 @@ Two corrections over the first version.
 LOOK-AHEAD: a pivot at bar i needs the K bars after it, so at decision bar b
 only pivots with i <= b-K-1 are visible.  Enforced everywhere.
 """
-import numpy as np, pandas as pd, warnings
-warnings.filterwarnings("ignore")
+import numpy as np, pandas as pd
 
 K, LOOKBACK, CLUST, MIN_SWINGS = 3, 60, 0.015, 3
 BUF, RWIN, MAXBARS, PAD = 0.005, 15, 20, 0.002

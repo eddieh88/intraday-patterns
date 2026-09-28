@@ -215,8 +215,10 @@ artificial penalty — the comparison between them is what counts.
 Run from the repository root:
 
 ```bash
-pip install -r requirements.txt
-python3 data/mp5_fetch.py              # download the 5-minute archive
+pip install -r requirements.txt       # dependencies + the shared modules in lib/
+git config core.hooksPath hooks        # once: secret scan and tests before each commit
+python3 -m pytest -q                   # unit tests (no data needed)
+python3 data/mp_fetch.py stock_5min    # download the 5-minute archive
 python3 data/build_daily.py            # build the shared daily table and the universe
 python3 data/universe_check.py         # fails if the universe ever uses future data
 python3 experiments/e18_momentum.py    # the momentum comparison

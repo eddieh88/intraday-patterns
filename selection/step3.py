@@ -18,7 +18,6 @@ import pandas as pd, numpy as np, sys
 import statsmodels.api as sm
 from scipy.stats import spearmanr
 from sklearn.linear_model import Ridge
-sys.path.insert(0, "lib")
 from holdout import assert_sealed
 
 BLOCKS = ["2022-07-01","2023-01-01","2023-07-01","2024-01-01","2024-07-01","2025-01-01","2025-04-01"]

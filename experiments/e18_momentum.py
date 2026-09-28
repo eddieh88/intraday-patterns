@@ -19,7 +19,6 @@ Also reports long and short direction R separately, since a zero benchmark
 assumes the long/short mix does not pick up 2021-26 drift.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 COST_BP, MAXB, K, CAP = 0.0, 60, 12, 3
 # FILL=close enters at the close of the bar that produced the signal -- the bar

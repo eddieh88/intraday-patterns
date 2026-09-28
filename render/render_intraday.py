@@ -4,7 +4,6 @@ Writes figures/intraday_setups.png
 """
 import pandas as pd, numpy as np, glob, sys, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames, find_setups, MIN_GAP, MIN_ADV, RWIN
 
 NAMES = {"AAPL","MSFT","NVDA","AMD","TSLA","META","AMZN","SPY","QQQ","GOOGL","NFLX","JPM"}

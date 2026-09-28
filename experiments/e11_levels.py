@@ -35,7 +35,6 @@ volatility without predicting direction is a good place to trade FROM but
 supplies no edge by itself.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 HOLD, T0, T1 = 12, 9.5, 11.5
 rng=np.random.default_rng(0)

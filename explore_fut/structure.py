@@ -21,8 +21,7 @@ York time (the missing hour is the 17:00 CME break).
   python3 explore_fut/structure.py holdout    -> cache/fut_zone_trades_holdout.parquet (sealed)
 """
 import pandas as pd, numpy as np, glob, sys, time, os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from lib.holdout import assert_sealed
+from holdout import assert_sealed
 t0 = time.time()
 DEV_END = pd.Timestamp("2025-04-01")
 TICK = {"GC": 0.1, "E6": 0.00005, "B6": 0.0001, "A6": 0.00005, "J1": 0.0000005}

@@ -1,8 +1,5 @@
-numpy>=1.24
-pandas>=2.0
-pyarrow>=12.0          # parquet
-requests>=2.28
-pandas_market_calendars>=4.0  # exact NYSE trading days for the date index
-torch>=2.0             # GPU arms only (Colab); CPU benchmarks do not need it
-polars>=0.20           # openassetpricing dependency, crosswalk.py only
-openassetpricing>=1.0  # crosswalk.py only
+# Installs this repository (the shared modules in lib/) and its dependencies,
+# which are declared in pyproject.toml. Run from the repository root:
+#   pip install -r requirements.txt
+# The Colab notebook (colab/) installs torch itself; it is not needed locally.
+-e .[test]

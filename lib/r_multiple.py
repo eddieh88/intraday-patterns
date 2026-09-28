@@ -11,10 +11,8 @@ still lose.
   first touch wins; if a bar spans both, the STOP is assumed first (conservative)
   if neither within MAXBARS, mark to market at that close, in R units
 """
-import numpy as np, pandas as pd, warnings
-warnings.filterwarnings("ignore")
-import sys; sys.path.insert(0, "lib")
-from swing_levels import scan_trades   # provided below if missing
+import numpy as np, pandas as pd
+from swing_levels import scan_trades
 
 RR, MAXBARS, PAD = 3.0, 20, 0.002
 

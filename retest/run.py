@@ -6,7 +6,8 @@ Levels, ATR and the 09:30 open come from the selection study's stage A table
   python3 retest/run.py   -> cache/retest_rows.parquet
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "retest"); sys.path.insert(0, "selection"); sys.path.insert(0, "lib")
+from paths import add_to_path
+add_to_path("retest", "selection")
 import detect as D
 from session_summary import session_close
 from holdout import HOLDOUT_START, assert_sealed

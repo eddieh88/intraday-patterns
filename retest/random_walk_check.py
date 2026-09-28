@@ -5,7 +5,8 @@ each other. Uses retest/detect.py unchanged.
   python3 retest/random_walk_check.py
 """
 import numpy as np, sys
-sys.path.insert(0, "retest")
+from paths import add_to_path
+add_to_path("retest")
 import detect as D
 
 rng = np.random.default_rng(int(sys.argv[3]) if len(sys.argv) > 3 else 11)

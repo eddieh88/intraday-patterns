@@ -11,7 +11,7 @@ Writes figures/real_setups.png
 """
 import numpy as np, pandas as pd, warnings, sys, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
-warnings.filterwarnings("ignore"); sys.path.insert(0, "lib")
+warnings.filterwarnings("ignore")
 from setups_v2 import (pivots, horiz_level, trendline, struct_stop,
                        K, LOOKBACK, CLUST, MIN_SWINGS, BUF, RWIN, MAXBARS, PAD, TL_MIN_PTS)
 RR=3.0

@@ -14,7 +14,6 @@ Reported across a grid of displacement and width thresholds, so the effect of
 each filter is visible rather than baked in.
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 
 def gaps(o,h,l,c,atr,disp,minw):

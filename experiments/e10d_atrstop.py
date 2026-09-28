@@ -30,7 +30,6 @@ LONG MINUS SHORT spread:
 """
 import pandas as pd, numpy as np, glob, sys, time
 from scipy import stats
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 COST_BP, MAXB = 1.0, 60
 rng=np.random.default_rng(0)

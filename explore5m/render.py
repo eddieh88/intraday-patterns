@@ -4,7 +4,6 @@
   python3 explore5m/render.py soup   -> explore5m/figures/sample_soup.png
 """
 import pandas as pd, numpy as np, sys, glob
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt

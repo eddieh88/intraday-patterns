@@ -11,7 +11,8 @@ import pandas as pd, numpy as np, sys, warnings
 import lightgbm as lgb
 import statsmodels.api as sm
 from scipy.stats import spearmanr
-sys.path.insert(0, "selection"); sys.path.insert(0, "lib")
+from paths import add_to_path
+add_to_path("selection")
 from step3 import load, clip_t, BLOCKS, PURGE
 warnings.filterwarnings("ignore")
 

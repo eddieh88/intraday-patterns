@@ -1,7 +1,8 @@
 # lib
 
-Shared detectors. Experiments add `lib/` to `sys.path` and import from here, so
-every experiment sees the same definition of a level, a break and a retest.
+Shared detectors, installed as top-level modules by `pip install -r requirements.txt`
+(see `pyproject.toml`), so every experiment imports the same definition of a level,
+a break and a retest, from any directory.
 
 | file | |
 |---|---|
@@ -9,6 +10,7 @@ every experiment sees the same definition of a level, a break and a retest.
 | `setups_v2.py` | Horizontal-level breaks and trendline breaks, analysed **separately** — conflating them was the earlier mistake. |
 | `swing_levels.py` | Support/resistance from swing points, the way levels are actually drawn. |
 | `holdout.py` | Seals 2025-04-01 onward for `prereg/selection.md`. Load data through `development()`; reading the holdout needs `HOLDOUT_UNLOCK=final-evaluation`, once. |
+| `paths.py` | `ROOT` and `add_to_path()` for scripts that import sibling folders (e.g. `selection/`). |
 | `r_multiple.py` | Evaluates setups as 1R:3R bracket trades rather than fixed-horizon returns. |
 
 Changing anything here changes every experiment. `MIN_GAP` and `MIN_ADV` in

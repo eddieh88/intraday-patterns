@@ -5,22 +5,19 @@ experiment depends on.
 
 | file | |
 |---|---|
-| `mp5_fetch.py` | 5-minute equity bars → `cache/mp5min/` — **this is the one the experiments use** |
+| `mp_fetch.py` | Downloads any MarketParquet intraday archive: `python3 data/mp_fetch.py <dataset>`, with dataset `stock_5min` (→ `cache/mp5min/`, **the one the experiments use**), `etf_5min`, `futures_5min` or `futures_1min`. Resumable; files are written atomically. |
 | `build_daily.py` | One daily summary table from that archive → `cache/intraday_daily.parquet`, plus the point-in-time universe → `cache/intraday_pool.parquet`. Run once before any experiment. |
 | `universe_check.py` | Regression test: rebuilds the universe from files truncated at the day before and requires an exact match. **Run it before trusting any result.** |
-| `mp_etf_5min_fetch.py` | ETF 5-minute bars (3.2 GB) — **downloaded, never used in any test** |
-| `mp_futures_5min_fetch.py` | Futures 5-minute bars (511 MB, ES verified back-adjusted) — **never used** |
-| `mp_futures_1min_fetch.py` | Futures 1-minute bars (1.4 GB) — **never used** |
 | `mp_validate.py` | The pre-purchase gate. Sales are final, so this had to be decisive before buying. |
 
-The futures and ETF archives are the largest untested opportunity in this
-repository: almost every setting tested here is taught on ES, NQ and SPY, and
-every test ran on single stocks.
+Archive sizes: ETF 5-minute bars 3.2 GB (read by `selection/session_summary.py`);
+futures 5-minute bars 511 MB (ES verified back-adjusted; used by `explore_fut/`);
+futures 1-minute bars 1.4 GB (not used yet).
 
 ## Setup
 
 ```bash
-python3 data/mp5_fetch.py     # then
+python3 data/mp_fetch.py stock_5min   # then
 python3 data/build_daily.py
 python3 data/universe_check.py
 ```

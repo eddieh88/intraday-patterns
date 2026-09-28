@@ -36,7 +36,8 @@ detected early close). Every trade is flat by the close.
   python3 explore5m/detect.py [every_nth_session]   -> cache/x5_events.parquet
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib"); sys.path.insert(0, "selection")
+from paths import add_to_path
+add_to_path("selection")
 from intraday_levels import session_frames
 from holdout import HOLDOUT_START, assert_sealed
 from session_summary import session_close

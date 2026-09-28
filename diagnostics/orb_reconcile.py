@@ -1,7 +1,6 @@
 """Isolate the ORB signal-R discrepancy: -0.0700 (diagnostic) vs +0.0198 (E18).
 Toggle each difference between the two runs one at a time."""
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 MAXB=60
 def trade(o,h,l,c,e,up,risk,cost_bp):

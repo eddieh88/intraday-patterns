@@ -13,7 +13,6 @@ since these are outcomes. One row per name-day in the feature table:
   python3 selection/outcomes.py   -> cache/sel_outcomes.parquet
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from holdout import HOLDOUT_START, assert_sealed
 
 COLS = ["timestamp","symbol","open","high","low","close","volume"]

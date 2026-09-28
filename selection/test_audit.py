@@ -14,7 +14,8 @@
   python3 selection/test_audit.py
 """
 import pandas as pd, numpy as np, glob, sys, inspect, types
-sys.path.insert(0, "lib"); sys.path.insert(0, "selection")
+from paths import add_to_path
+add_to_path("selection")
 from holdout import HOLDOUT_START
 import session_summary as A, features as B
 

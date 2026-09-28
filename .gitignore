@@ -13,12 +13,16 @@ cache
 # results ARE tracked: a pre-registration is worthless if the result can be
 # quietly regenerated after the fact.
 
-# the authors published residuals (~780MB); setup_data.py rebuilds them
-dlsa_real/
+# numpy arrays written by experiments (e.g. e09_path.py) into cache/
 *.npy
 
 *.log
 
-# model checkpoints and OS cruft
+# model checkpoints (the Colab notebook saves to Drive; ignore any local copies)
 *.pt
+
+# OS cruft
 .DS_Store
+
+# created by pip install -e .
+*.egg-info/

@@ -16,8 +16,7 @@ K bars after it.  At decision bar b only pivots with i <= b-K-1 may be used.
 Using unconfirmed pivots would leak the future, which is the bug that cost this
 project a 19%/yr artifact earlier today.
 """
-import numpy as np, pandas as pd, warnings
-warnings.filterwarnings("ignore")
+import numpy as np, pandas as pd
 
 K, LOOKBACK, CLUST, MIN_SWINGS, BUF, RWIN, FWD = 3, 60, 0.015, 3, 0.005, 10, 5
 

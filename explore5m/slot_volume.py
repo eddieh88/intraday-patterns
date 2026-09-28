@@ -4,7 +4,6 @@ that slot over the PRIOR 20 sessions (the day itself excluded). Development only
   python3 explore5m/slot_volume.py   -> cache/x5_slotvol.parquet
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from holdout import HOLDOUT_START
 t0 = time.time()
 pool = pd.read_parquet("cache/intraday_pool.parquet"); pool = pool[(pool.rk <= 100) & (pool.date < HOLDOUT_START)]

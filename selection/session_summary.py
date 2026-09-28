@@ -12,7 +12,6 @@ stamped before 09:30.
   python3 selection/session_summary.py   -> cache/sel_stocks.parquet, cache/sel_etfs.parquet
 """
 import pandas as pd, numpy as np, glob, sys, time
-sys.path.insert(0, "lib")
 from holdout import HOLDOUT_START, assert_sealed
 
 ETFS = ["SPY","XLK","XLF","XLE","XLV","XLY","XLP","XLI","XLU","XLB","XLRE","XLC","SMH","VIXY"]

@@ -3,7 +3,8 @@
   python3 explore_fut/render.py   -> explore_fut/figures/sample_zones.png
 """
 import pandas as pd, numpy as np, sys
-sys.path.insert(0, "explore_fut")
+from paths import add_to_path
+add_to_path("explore_fut")
 import structure as S
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt

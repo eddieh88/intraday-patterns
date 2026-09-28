@@ -12,7 +12,6 @@ Adds, on top of the idealised version:
 """
 import numpy as np, pandas as pd, warnings, sys
 warnings.filterwarnings("ignore")
-sys.path.insert(0, "lib")
 from swing_levels import scan_trades
 
 RR, MAXBARS, PAD = 3.0, 20, 0.002

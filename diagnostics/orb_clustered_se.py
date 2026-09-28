@@ -1,6 +1,5 @@
 """Clustered SEs for the two ORB numbers that disagreed."""
 import pandas as pd, numpy as np, glob, sys
-sys.path.insert(0, "lib")
 from intraday_levels import session_frames
 MAXB=60
 def trade(o,h,l,c,e,up,risk,cost_bp):
