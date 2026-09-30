@@ -8,7 +8,7 @@ releases (8:30 ET) appear at 08:30 in both winter and summer: the timestamps are
 York local time WITH daylight saving. Checked 2026-09-30 on four 2021 payroll days.
 
 Resumable (finished months are skipped) and polite (one request every few seconds).
-Months before 2021 belong to the sealed early period (see lib/holdout.py) -- this
+Months before 2015 belong to the sealed early period (see lib/holdout.py) -- this
 script only downloads and aggregates them; it never prints anything about prices.
 
   python3 data/histdata_fetch.py                    # dev years first, then early years

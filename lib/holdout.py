@@ -27,15 +27,17 @@ def assert_sealed(dates):
     return d
 
 
-# The early period: 2008-2020 futures and 2010-2020 HistData spot FX, downloaded
-# 2026-09-30 and never read by any test before prereg/own_fx.md. It is sealed the
-# same way, with its own switch, so unlocking one holdout never opens the other.
-EARLY_END = pd.Timestamp("2021-01-01")
+# The early period: 2008-2014 futures and 2010-2014 HistData spot FX, the final
+# holdout for our own FX strategy. Downloaded 2026-09-30, never read. 2015-2020 was
+# downloaded at the same time, also unread, and was moved into development on
+# 2026-09-30 (walk-forward over 2015-2026, then this holdout once). Its own switch,
+# so unlocking one holdout never opens the other.
+EARLY_END = pd.Timestamp("2015-01-01")
 _EARLY_UNLOCKED = os.environ.get("EARLY_UNLOCK") == "final-evaluation"
 
 
 def assert_early_sealed(dates):
-    """Fail loudly if any date falls before 2021 and the early period is not unlocked."""
+    """Fail loudly if any date falls before 2015 and the early period is not unlocked."""
     d = pd.to_datetime(pd.Series(dates))
     n = int((d < EARLY_END).sum())
     if n and not _EARLY_UNLOCKED:

@@ -55,3 +55,56 @@ def test_night_bracket_is_symmetric():
     mid[k + 4:] = 1.0002                             # rebounds past the 1:1 target
     t = st.night(frame(ts, mid, spread=0.00002), exit="bracket").iloc[0]
     assert (t.side, t.why) == (1, "target")
+
+
+def _bars(mids, spread=0.0002):
+    import generator as g
+    ts = pd.date_range("2024-03-04 00:00", periods=len(mids), freq="1h")      # a Monday
+    h = pd.DataFrame(index=ts)
+    for c, v in zip(("open", "high", "low", "close"), np.array(mids, float).T):
+        h[f"mid_{c}"] = v
+        h[f"bid_{c}"] = v - spread / 2
+        h[f"ask_{c}"] = v + spread / 2
+    A = g.prepare(h)
+    A["atr"] = np.full(len(h), 0.0010)
+    A["month"] = np.zeros(len(h), np.int64)
+    return g, A
+
+
+def _run(g, A, go_l, a=1.0, b=1.0, hold=4):
+    out = np.zeros((1, 3))
+    g.run_one(np.array(go_l), np.zeros(len(go_l), bool), A["atr"], A["bo"], A["bh"], A["bl"], A["bc"],
+              A["ao"], A["ah"], A["al"], A["ac"], A["mid_o"], A["ok"], A["fri_end"], A["month"], a, b, hold, out)
+    return out[0]
+
+
+def test_engine_long_hits_target_after_paying_the_spread():
+    add_to_path("explore_own")
+    # (open, high, low, close) mids: enter at bar 1's ask (1.0001), target +10 pips on the bid
+    g, A = _bars([(1, 1, 1, 1), (1, 1, 1, 1), (1, 1.0013, 1, 1.0012), (1.0012,) * 4, (1.0012,) * 4, (1.0012,) * 4])
+    s, n, _ = _run(g, A, [True, False, False, False, False, False])
+    assert n == 1 and abs(s - 10.0) < 1e-6          # exit at target 1.0011 on the bid: +10 bp
+
+
+def test_engine_stop_first_and_time_exit():
+    add_to_path("explore_own")
+    g, A = _bars([(1, 1, 1, 1), (1, 1, 1, 1), (1, 1.002, 0.998, 1), (1,) * 4, (1,) * 4, (1,) * 4, (1,) * 4])
+    s, n, _ = _run(g, A, [True] + [False] * 6)
+    assert n == 1 and abs(s - (1.0001 - 0.0010 - 1.0001) / 1.0 * 1e4) < 1e-6     # stop, not target
+    g, A = _bars([(1,) * 4] * 8)
+    s, n, _ = _run(g, A, [True] + [False] * 7, hold=3)
+    assert n == 1 and abs(s - (-2.0)) < 1e-6        # time exit at the bid: pays the 2 bp spread
+
+
+def test_shuffled_keeps_length_and_spreads():
+    add_to_path("explore_own")
+    import generator as g
+    ts = pd.date_range("2024-03-04", periods=300, freq="1h")
+    rng = np.random.default_rng(0)
+    mid = 1 + np.cumsum(rng.normal(0, 1e-4, 300))
+    h = pd.DataFrame({"mid_open": mid, "mid_high": mid + 1e-4, "mid_low": mid - 1e-4, "mid_close": mid}, index=ts)
+    for c in ("open", "high", "low", "close"):
+        h[f"bid_{c}"], h[f"ask_{c}"] = h[f"mid_{c}"] - 1e-5, h[f"mid_{c}"] + 1e-5
+    n = g.shuffled(h, 1)
+    assert len(n) == 300 and (n.mid_low <= n.mid_high).all()
+    assert np.allclose(n.ask_open - n.bid_open, 2e-5)

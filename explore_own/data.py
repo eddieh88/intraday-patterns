@@ -1,7 +1,7 @@
 """Spot FX 1-minute bid/ask bars from HistData (data/histdata_fetch.py).
 
-  load(pair, period)  period "dev": 2021 on (development)
-                      period "early": before 2021 (sealed: EARLY_UNLOCK=final-evaluation)
+  load(pair, period)  period "dev": 2015 on (development, walk-forward)
+                      period "early": before 2015 (final holdout, sealed: EARLY_UNLOCK=final-evaluation)
 Returns a frame indexed by New York time (tz-naive, bar start) with bid_*/ask_* OHLC,
 mid_* OHLC, spread_mean/spread_max (pips) and ticks. HistData's spread is its
 source's all-in retail spread; we trade on it with no extra commission, which
