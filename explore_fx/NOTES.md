@@ -55,3 +55,20 @@ legs, from 18:15 to 01:00 New York and flat at 02:00. It **fails** on both perio
 −1.6 and −1.9 bp per trade net. The reversion before costs is real but tiny, +0.3
 to +0.6 bp. It would pay only at costs under about half a pip, which fits "your
 edge is infra". We can't test his spread filter without quote data.
+
+### Under published costs (`plot_night_costs.py` → `figures/night_costs.png`, exploratory)
+
+Cumulative return, with 1× notional per trade:
+
+| | before costs | IBKR >$5B/mo, average spread | IBKR >$5B/mo, night spread ×3 | IBKR <$1B/mo, average spread |
+|---|---|---|---|---|
+| all three crosses | +63% | +12% | −50% | −16% |
+| EURGBP + EURCHF | +54% | +33% | +16% | +15% |
+
+- With AUDNZD included, only the most favourable cost case stays positive, and it
+  has fallen since early 2026.
+- The two tight crosses stay positive in every cost case. But AUDNZD was dropped
+  after seeing the results.
+- The September 2022 sterling crisis contributes 4.3 of the 54 points before costs,
+  so it doesn't carry the result.
+- The "night ×3" spread is a guess. We have no quote data.
