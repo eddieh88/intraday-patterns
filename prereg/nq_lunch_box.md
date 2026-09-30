@@ -55,4 +55,28 @@ A variant passes only if it passes on the holdout.
 
 ## Results
 
-(Not yet run.)
+Pre-registration committed in f128285. One bug was fixed before the first
+successful run: variant B crashed on the first 20 days, which have no 20-day
+average; they are skipped as intended. The holdout was unlocked once, on
+2026-09-29. Net points per trade; ± is a week-clustered standard error.
+
+| variant | period | days traded | trades | win | net pts/trade | verdict |
+|---|---|---|---|---|---|---|
+| A, box fade | development | 99 / 1,320 | 118 | 18% | −2.27 ± 0.66 (t −3.43) | **FAIL** |
+| A, box fade | holdout | 63 / 461 | 90 | 30% | −0.17 ± 1.08 (t −0.16) | **FAIL** |
+| B, + daily-trend bias | development | 55 | 61 | 23% | −1.43 ± 1.01 (t −1.41) | **FAIL** |
+| B, + daily-trend bias | holdout | 39 | 46 | 33% | +0.62 ± 1.36 (t +0.45) | **FAIL** |
+| C, + ES box exit | development | 90 | 99 | 22% | −1.75 ± 0.68 (t −2.59) | **FAIL** |
+| C, + ES box exit | holdout | 57 | 70 | 34% | +0.15 ± 1.22 (t +0.12) | **FAIL** |
+
+**The edge of a quiet box is where it breaks, not where it bounces.** In development:
+
+| exit | trades | mean net pts |
+|---|---|---|
+| a 1-minute close outside the box | 74 | −4.5 |
+| hard stop | 23 | −8.0 |
+| target | 21 | +11.9 |
+
+The median trade lasts 2 minutes. When price reaches the edge, the next close is
+usually outside it. This matches the earlier findings in this repo: opening-range
+breaks tend to continue, and levels don't hold on the retest.

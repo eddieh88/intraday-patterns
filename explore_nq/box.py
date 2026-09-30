@@ -106,7 +106,7 @@ def run(nq, es=None, use_bias=False):
     by_es = {d: g for d, g in es.groupby(es.index.normalize())} if es is not None else {}
     out = []
     for day, g in nq.groupby(nq.index.normalize()):
-        b = int(trend.get(day, 0) or 0) if use_bias else 0
+        b = int(np.nan_to_num(trend.get(day, 0))) if use_bias else 0
         if use_bias and b == 0:
             continue
         if es is not None and day not in by_es:

@@ -117,3 +117,17 @@ Their fifths bounce between −0.10 and +0.06 ATR with no order, and the standar
 error per fifth is about ±0.04. The most sideways fifth by the 10-day ratio or ADX
 nets +0.01. This is the same wall `selection/` hit: nothing visible in the morning
 says which mornings will trend.
+
+## The "Lunch Box" (`box.py`, pre-registered in `prereg/nq_lunch_box.md`)
+
+The author said the posted algorithm was his attempt at this trade: fade the edges
+of a narrow NQ range in the afternoon, and get out when the box breaks. The box is
+the 12:00–12:30 range, taken only when it is ≤ 15 bp (~40 points at 2026 prices).
+
+It **fails**:
+- development: −2.27 pts per trade (t −3.4), an 18% win rate
+- holdout: −0.17 (t −0.2)
+
+Neither the daily-trend bias nor the ES exit helps. 74 of the 118 development
+trades end with a close outside the box, a median of 2 minutes after entry. On a
+quiet day, price reaching the edge of the box is usually the start of the breakout.

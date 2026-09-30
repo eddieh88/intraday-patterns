@@ -11,7 +11,7 @@ flattering.
 | `retest.md` | Run. **Not supported:** retests of real levels hold 50.2% of the time, fakes 50.3%; real − fake +0.24bp, 95% CI [−0.35, +0.84]. See `retest/RESULTS.md`. |
 | `selection.md` | Run. **No** — nothing at 09:45 picks the mornings a momentum entry pays; see `selection/RESULTS.md`. Which name-days, visible at 09:45, make a pattern-free momentum entry pay after costs. Holdout enforced by `lib/holdout.py`. |
 | `nq_mean_reversion.md` | Run. **Fails** on both periods: a long-only NQ 3-minute mean-reversion system posted on X makes −0.72 pts/trade in development and +1.05 (t 0.8) in the holdout, and the scale-in makes no difference to the mean. |
-| **`nq_lunch_box.md`** | **Registered, not yet run.** Fading the edges of a narrow 12:00–12:30 NQ range in the afternoon, with the author's tips as variants. |
+| `nq_lunch_box.md` | Run. **Fails** on both periods: fading the edges of a narrow 12:00–12:30 NQ box loses −2.27 pts/trade in development (t −3.4) and −0.17 in the holdout. Adding either the trend bias or the ES exit makes no difference. |
 | **`ifvg.md`** | **Written, never run.** Inverse fair value gaps on futures, specified against expert review of the geometry. |
 
 Only some of this project was pre-registered, and the rest is exploratory. That
