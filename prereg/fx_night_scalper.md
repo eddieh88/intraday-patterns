@@ -82,3 +82,32 @@ printing through the target, which favours prints on the right side of the sprea
 
 Bollinger(10) and Bollinger(40) are the same. "Your edge is infra" is the only way
 this family could pay.
+
+### Added after the verdict: published broker costs (exploratory)
+
+The registered costs (1.5 / 3 / 2 pips) were assumed, not looked up. Published
+costs (checked 2026-09-30) are lower:
+- **IC Markets Raw:** $7 per 100k round trip; average raw spreads of 0.1 pips on
+  EURGBP and EURCHF and 0.6 on AUDNZD.
+- **Pepperstone Razor:** the same commission; EURGBP averages 0.3–0.4 pips.
+- **Interactive Brokers:** 0.2 bp per side, plus the spread.
+
+That is about 0.5–0.75 bp round trip on EURGBP and EURCHF, and 1–1.6 bp on AUDNZD.
+The published spreads are averages over all hours. Overnight and near rollover
+they are wider, which we approximate as 3×. Net bp per trade:
+
+| costs | all 3, dev / holdout | EURGBP + EURCHF only, dev / holdout |
+|---|---|---|
+| ECN, average spread | −0.42 / −0.76 | −0.04 / −0.04 |
+| ECN, night spread ×3 | −0.95 / −1.29 | −0.26 / −0.26 |
+| IBKR, average spread | −0.05 / −0.39 | +0.19 (t 2.1) / +0.18 (t 1.7) |
+| IBKR, night spread ×3 | −0.58 / −0.92 | −0.03 / −0.04 |
+
+At the cheapest costs, the two tight crosses are roughly break-even. In the single
+best case (IBKR, average spreads) they are slightly positive. Three things work
+against that best case:
+- The two crosses were chosen after seeing the results.
+- Average spreads understate the overnight spreads.
+- The gross figure may carry some bid-ask bounce.
+
+The verdict stands. Costs, not the signal, decide this family.
