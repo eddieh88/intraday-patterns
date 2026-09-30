@@ -97,3 +97,23 @@ That makes fixed tick costs a smaller share of each trade.
 **What the system actually is:** a bracket order on a random walk. The target sits
 closer than the stop, so the win rate is high, and the average is minus the costs.
 Stretches of mild post-dip reversion, like 2026, make it look good for a few months.
+
+## Does it work in sideways ("crab") markets? (`regime.py`, exploratory)
+
+**In hindsight, yes.** Mornings are cut into fifths by how sideways the
+10:00–12:00 window turned out:
+- The four most sideways fifths make +0.03 to +0.07 ATR per trade, net.
+- The most trending fifth loses −0.25 ATR per trade, and that wipes out the rest.
+
+This is biased in the strategy's favour: a window that ends flat is one where the
+dips came back.
+
+**In advance, no.** None of these, cut into fifths, picks those mornings:
+- the daily efficiency ratio over 10 or 20 sessions
+- daily ADX(14)
+- the efficiency ratio of the session so far
+
+Their fifths bounce between −0.10 and +0.06 ATR with no order, and the standard
+error per fifth is about ±0.04. The most sideways fifth by the 10-day ratio or ADX
+nets +0.01. This is the same wall `selection/` hit: nothing visible in the morning
+says which mornings will trend.
