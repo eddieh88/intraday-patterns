@@ -31,15 +31,15 @@ COMMISSION = 0.225              # points per contract round trip (~$4.50 on NQ)
 WINDOW = ("10:00:00", "12:00:00")     # New York time = 9:00-11:00 CT
 
 
-def load_nq(period="dev"):
-    """1-minute NQ bars (New York time, labelled at the bar's start), cached."""
-    out = f"cache/nq_1min_{period}.parquet"
+def load_nq(period="dev", symbol="NQ"):
+    """1-minute bars of one futures market (New York time, labelled at the bar's start), cached."""
+    out = f"cache/{symbol.lower()}_1min_{period}.parquet"
     if not os.path.exists(out):
         rows = []
         for f in sorted(glob.glob("cache/mp_futures_1min/*.parquet")):
             if (pd.Timestamp(f.split("_")[-1][:10]) >= HOLDOUT_START) != (period == "holdout"):
                 continue
-            rows.append(pq.read_table(f, filters=[("symbol", "=", "NQ")]).to_pandas())
+            rows.append(pq.read_table(f, filters=[("symbol", "=", symbol)]).to_pandas())
         d = pd.concat(rows)
         d["ts"] = pd.to_datetime(d.timestamp)
         if period == "holdout":
@@ -74,16 +74,20 @@ def atr(b, n=14):
 
 
 def simulate(m1, b3, levels=((1.0, 1.0),), er_max=0.35, stop_atr=1.5, cancel_min=9,
-             time_stop=15, optimistic=False):
+             time_stop=15, optimistic=False, target_atr=None, er_min=-np.inf,
+             window=WINDOW, tick=TICK, commission=COMMISSION):
     """levels: (ATR multiple below the close, fraction of the position) for each limit.
     The first level is the signal's; the others are scale-in adds, live until the
     position exits. b3 may carry precomputed `er` and `atr` columns.
+    target_atr: None = the middle of the signal candle (as posted); a number = that
+    many ATRs above the first limit (np.inf: no target). stop_atr=np.inf: no stop.
+    For shorts, pass negated prices (`mirror`).
     -> one row per filled trade."""
     if "er" not in b3:
         b3 = b3.assign(er=efficiency_ratio(b3.close), atr=atr(b3))
     trades = []
     for day, sig in b3.groupby(b3.index.normalize()):
-        t0, t1 = day + pd.Timedelta(WINDOW[0]), day + pd.Timedelta(WINDOW[1])
+        t0, t1 = day + pd.Timedelta(window[0]), day + pd.Timedelta(window[1])
         sig = sig[(sig.index >= t0) & (sig.index + pd.Timedelta("3min") < t1)]
         mm = m1[(m1.index >= t0) & (m1.index < t1 + pd.Timedelta("1min"))]
         if sig.empty or mm.empty:
@@ -92,18 +96,18 @@ def simulate(m1, b3, levels=((1.0, 1.0),), er_max=0.35, stop_atr=1.5, cancel_min
         free_at = t0
         for s, r in sig.iterrows():
             close_t = s + pd.Timedelta("3min")
-            if close_t < free_at or not (r.er <= er_max):
+            if close_t < free_at or not (er_min < r.er <= er_max):
                 continue
             px = [r.close - k * r.atr for k, _ in levels]
             w = [f for _, f in levels]
             cancel = min(close_t + pd.Timedelta(minutes=cancel_min), t1)
             i = ts.searchsorted(close_t)
             j_end = ts.searchsorted(cancel)
-            f = next((j for j in range(i, j_end) if L[j] <= px[0] - TICK), None)
+            f = next((j for j in range(i, j_end) if L[j] <= px[0] - tick), None)
             if f is None:
                 free_at = cancel
                 continue
-            target = (r.high + r.low) / 2
+            target = (r.high + r.low) / 2 if target_atr is None else px[0] + target_atr * r.atr
             stop = px[0] - stop_atr * r.atr
             t_exit = min(ts[f] + pd.Timedelta(minutes=time_stop), t1)
             filled = [False] * len(px)
@@ -111,30 +115,36 @@ def simulate(m1, b3, levels=((1.0, 1.0),), er_max=0.35, stop_atr=1.5, cancel_min
             j = f
             while j < len(ts):
                 if ts[j] >= t_exit:                     # time stop or 12:00, at the open
-                    exit_px, why = O[j] - TICK, "time" if t_exit < t1 else "12:00"
+                    exit_px, why = O[j] - tick, "time" if t_exit < t1 else "12:00"
                     break
                 for q in range(len(px)):                # adds first: the losing order
-                    if not filled[q] and L[j] <= px[q] - TICK:
+                    if not filled[q] and L[j] <= px[q] - tick:
                         filled[q] = True
                 if L[j] <= stop:
-                    exit_px, why = stop - TICK, "stop"
+                    exit_px, why = stop - tick, "stop"
                     break
-                if H[j] >= target + TICK and (j > f or optimistic):
+                if H[j] >= target + tick and (j > f or optimistic):
                     exit_px, why = target, "target"
                     break
                 j += 1
             if exit_px is None:                         # data ends before 12:00
                 j = len(ts) - 1
-                exit_px, why = C[j] - TICK, "data"
+                exit_px, why = C[j] - tick, "data"
             wf = np.array(w) * np.array(filled)
             pts = float(sum(wf[q] * (exit_px - px[q]) for q in range(len(px))))
             trades.append(dict(
                 day=day, signal=s, fill_t=ts[f], exit_t=ts[j], why=why, entry=px[0],
                 exit=exit_px, target=target, stop=stop, atr=r.atr, er=r.er,
                 size=wf.sum(), n_fills=int(sum(filled)), pts=pts,
-                pts_net=pts - COMMISSION * wf.sum()))
+                pts_net=pts - commission * wf.sum()))
             free_at = ts[j] if why in ("time", "12:00") else ts[j] + pd.Timedelta("1min")
     return pd.DataFrame(trades)
+
+
+def mirror(df):
+    """Negated prices: a long on the mirror is a short on the original."""
+    return pd.DataFrame({"open": -df.open, "high": -df.low, "low": -df.high, "close": -df.close},
+                        index=df.index)
 
 
 def random_control(m1, trades, n=20, seed=7, time_stop=15):

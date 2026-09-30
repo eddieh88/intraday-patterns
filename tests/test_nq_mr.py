@@ -80,3 +80,16 @@ def test_clustered_se_matches_iid_with_singleton_clusters():
     m, se = mr.clustered(x, np.arange(4))
     assert m == pytest.approx(x.mean())
     assert se == pytest.approx(x.std(ddof=1) / 2)
+
+
+def test_mirror_turns_a_rip_into_a_long_dip():
+    m1 = day_minutes({2: (102.5, 100)})                  # a spike up, no dip
+    sig = signal(close=100.0, high=102.0, low=96.0)      # mirrored: limit at -102, target -99
+    assert mr.simulate(m1, sig).empty
+    t = mr.simulate(mr.mirror(m1), mr.mirror(sig).assign(er=0.2, atr=2.0)).iloc[0]
+    assert (t.entry, t.why) == (-102.0, "time")
+
+
+def test_target_in_atrs_from_the_limit():
+    t = mr.simulate(day_minutes({2: (100, 97.5), 4: (99.5, 99)}), signal(), target_atr=0.5).iloc[0]
+    assert (t.why, t.pts) == ("target", 1.0)
