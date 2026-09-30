@@ -88,4 +88,48 @@ A system passes only if it passes on the holdout.
 
 ## Results
 
-(Not yet run.)
+Pre-registration committed in 7667f54, then development was run, then the
+holdout was unlocked once, on 2026-09-29. Points are per trade, net of slippage
+and commission. ± is a week-clustered standard error. One NQ point = $20.
+
+| test | period | trades | win | net pts/trade | verdict |
+|---|---|---|---|---|---|
+| A1, as posted | development | 2,971 | 57.3% | −0.72 ± 0.51 (t −1.40) | **FAIL** |
+| A1, as posted | holdout | 1,034 | 60.3% | +1.05 ± 1.30 (t +0.81) | **FAIL** |
+| A2, A − same-day random longs | development | 2,971 | | +1.91 ± 0.46 (t +4.18) | pass |
+| A2, A − same-day random longs | holdout | 1,034 | | +5.55 ± 1.28 (t +4.32) | pass |
+| B, scale-in | development | 2,971 | 61.2% | −0.66 ± 0.42 (t −1.58) | **FAIL** |
+| B, scale-in | holdout | 1,034 | 63.3% | +0.96 ± 1.01 (t +0.95) | **FAIL** |
+
+**The system is not profitable at a level we can tell from zero, as posted or with
+the scale-in.** Development loses money. The holdout makes +$59 per day on one
+contract, but with t 0.8. All of that is 2026: April–December 2025 lost −1.91 pts per trade, and
+2026 made +4.10. The rules were posted in 2026.
+
+**A2 passes, but its control was the wrong one.** It samples random minutes of the
+trade's own day. Days with many dips are falling mornings, and they contribute the
+most trades, so the control leans toward down days. It lost −2.6 pts per trade
+before this was noticed, although the average 15-minute drift in the window is
++0.2. A fairer control, added after the development run and so **exploratory**,
+takes the same minute of day on a random other day. Against it, A is
++0.25 ± 0.54 (t 0.5) in development and +2.15 ± 1.33 (t 1.6) in the holdout.
+
+### Sensitivity (no verdict)
+
+| | development | holdout |
+|---|---|---|
+| A gross of commission | −0.50 | +1.27 |
+| A, no efficiency-ratio filter | −0.49 (t −1.05) | −0.37 (t −0.24) |
+| A, target credited in the fill minute | +1.76 (t +3.58) | +3.22 (t +2.59) |
+| A, max drawdown | 3,107 pts ($62k) | 1,488 pts ($30k) |
+| B, max drawdown | 2,911 pts ($58k) | 1,166 pts ($23k) |
+
+**The fill-minute row is an artefact, not a lead.** 15% of trades have the target
+inside the minute of the fill. In 92% of those minutes, the open is nearer the high
+than the low. The minute started at or above the target and fell to the limit, so
+the high came before the fill. Crediting only the minutes where the low
+plausibly came first adds +0.06 pts per trade (development).
+
+**The scale-in does what the reply said, only smaller.** It raises the win rate by
+3–4 points and cuts the max drawdown by 6% and 22%. It leaves the mean per trade
+unchanged. It does not reach the claimed 70–75%.
