@@ -41,3 +41,17 @@ January 2021 balance.
   about 4.4%, and it steps at about 1.5%, 2.6% and 4.3%. We hold up to 6.
 - Their x-axis counts trades, so stretches with no trades are squeezed out. Time
   spent in the market can't be compared.
+
+## Night scalper (`night.py`, pre-registered in `../prereg/fx_night_scalper.md`)
+
+His later clues fit the classic night scalper:
+- three pairs
+- indicator-based
+- stops, and flat by the end of the day
+- spread filters
+
+We tested a Bollinger(20, 2) fade on EURGBP, AUDNZD and EURCHF, built from futures
+legs, from 18:15 to 01:00 New York and flat at 02:00. It **fails** on both periods:
+−1.6 and −1.9 bp per trade net. The reversion before costs is real but tiny, +0.3
+to +0.6 bp. It would pay only at costs under about half a pip, which fits "your
+edge is infra". We can't test his spread filter without quote data.

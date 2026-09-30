@@ -55,4 +55,30 @@ Net bp per trade, pooled over the three crosses, clustered by week.
 
 ## Results
 
-(Not yet run.)
+Pre-registration committed in 56c3f22. Development was run, then the holdout
+was read once, on 2026-09-30. Net bp per trade; ± is a week-clustered standard
+error.
+
+| | period | trades | win | gross bp | net bp/trade | verdict |
+|---|---|---|---|---|---|---|
+| all three | development | 8,989 | 55% | +0.61 | −1.60 ± 0.08 (t −20.2) | **FAIL** |
+| all three | holdout | 2,931 | 48% | +0.27 | −1.94 ± 0.13 (t −15.0) | **FAIL** |
+
+Each cross, development → holdout, net bp:
+- EURGBP: −1.00 → −1.14
+- EURCHF: −1.40 → −1.26
+- AUDNZD: −2.35 → −3.31
+
+Every year is negative, 2026 included (−2.54).
+
+**There is a small reversion before costs, far smaller than the cost.**
+- Gross, the fade makes +0.6 bp per trade in development and +0.3 in the holdout.
+- Entering 3 minutes late barely changes it (+0.55), so it is not stale prices.
+- Breaking even needs round-trip costs under ~0.6 bp, about half a pip all-in on
+  EURGBP. That is below retail and most ECN costs in the Asian session.
+
+Part of even that gross figure may be bid-ask bounce. Exits trigger on a trade
+printing through the target, which favours prints on the right side of the spread.
+
+Bollinger(10) and Bollinger(40) are the same. "Your edge is infra" is the only way
+this family could pay.
