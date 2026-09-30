@@ -25,3 +25,21 @@ def assert_sealed(dates):
             f"{n} rows fall in the sealed holdout (>= {HOLDOUT_START.date()}). "
             "See prereg/selection.md; set HOLDOUT_UNLOCK=final-evaluation only for step 5.")
     return d
+
+
+# The early period: 2008-2020 futures and 2010-2020 HistData spot FX, downloaded
+# 2026-09-30 and never read by any test before prereg/own_fx.md. It is sealed the
+# same way, with its own switch, so unlocking one holdout never opens the other.
+EARLY_END = pd.Timestamp("2021-01-01")
+_EARLY_UNLOCKED = os.environ.get("EARLY_UNLOCK") == "final-evaluation"
+
+
+def assert_early_sealed(dates):
+    """Fail loudly if any date falls before 2021 and the early period is not unlocked."""
+    d = pd.to_datetime(pd.Series(dates))
+    n = int((d < EARLY_END).sum())
+    if n and not _EARLY_UNLOCKED:
+        raise RuntimeError(
+            f"{n} rows fall in the sealed early period (< {EARLY_END.date()}). "
+            "See prereg/own_fx.md; set EARLY_UNLOCK=final-evaluation only for its final run.")
+    return d

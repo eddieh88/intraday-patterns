@@ -9,6 +9,8 @@ never leaves a truncated file that a later run would mistake for a finished one.
   python3 data/mp_fetch.py stock_5min                # from 2021-01-04 to today
   python3 data/mp_fetch.py stock_5min 2017-01-01     # from a date
   python3 data/mp_fetch.py futures_1min 2021-01-04 2024-12-31
+  python3 data/mp_fetch.py futures_5min 2008-01-01 2020-12-31 cache/mp_futures_5min_early
+                                                     # into another folder (the sealed early period)
 
 Needs a key at ~/.market_parquest/api_key.txt (never in the repo).
 """
@@ -63,11 +65,11 @@ def grab(item, out):
     print(f"  FAILED {item['filename']} ({error})", flush=True)
     return 0
 
-def main(dataset, start="2021-01-04", end=None):
+def main(dataset, start="2021-01-04", end=None, out=None):
     import pandas as pd
     if dataset not in DATASETS:
         sys.exit(f"unknown dataset {dataset!r}; choose from {', '.join(DATASETS)}")
-    out = DATASETS[dataset]
+    out = out or DATASETS[dataset]
     os.makedirs(out, exist_ok=True)
     h = hdrs()
     end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
