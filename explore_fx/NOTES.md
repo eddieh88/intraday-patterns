@@ -72,3 +72,32 @@ Cumulative return, with 1× notional per trade:
 - The September 2022 sterling crisis contributes 4.3 of the 54 points before costs,
   so it doesn't carry the result.
 - The "night ×3" spread is a guess. We have no quote data.
+
+## Is either candidate his strategy? (`match.py`, exploratory)
+
+We checked candidates against two fingerprints of his chart:
+- **Timing:** the correlation of trade rate with his, across his date-label
+  intervals. Each interval holds the same number of his trades.
+- **P&L:** the correlation of quarterly P&L with his.
+
+| candidate | timing | quarterly P&L |
+|---|---|---|
+| night scalper (Bollinger, three crosses) | −0.47 | +0.10 |
+| 1% distance fade, 4-hour | +0.38 | −0.09 |
+
+**Neither is his.** The Bollinger scalper trades most in calm stretches, the
+opposite of him. The 4-hour fade has the right timing but holds positions for days.
+
+We then searched 105 intraday rules with a fixed threshold, a stop and flat by
+16:45 New York. They cover three families (distance from the day's open, distance
+from the hourly SMA, a big hourly move), six thresholds and six pre-chosen sets of
+three pairs.
+- **Best match:** fading an hourly move of more than 0.4% on EUR, AUD and NZD
+  against USD. Timing +0.37, P&L +0.54, +1.7 bp per trade gross.
+- **That is no better than chance.** When his intervals and quarters are shuffled,
+  the best of the 105 scores 0.92 at the 95th percentile, against 0.91 for the real
+  match.
+
+The fixed-threshold intraday fade stays the family that fits his clues, but his
+chart doesn't carry enough information to single out a rule. Identifying it needs
+more from him: his trade count, win rate, average hold, or which three pairs.
