@@ -12,7 +12,9 @@ The survivors' out-of-sample results are compared with those of the survivors on
 shuffled data, which is what the same search finds when there is nothing to find.
 
   python3 explore_own/gen_run.py [real|null1|null2 ...]  -> cache/own_gen_<tag>.npz
+      (append _gross to a tag to trade at the mid, with no costs)
   python3 explore_own/gen_run.py report                  -> summary
+  python3 explore_own/gen_run.py persistence             -> does IS rank carry into OOS?
 """
 import multiprocessing as mp
 import sys
@@ -33,8 +35,12 @@ def build(tag):
     for k, p in enumerate(PAIRS):
         h = g.hourly(data.load(p, "dev"))
         h = h[h.index >= START.start_time]
-        if tag != "real":
-            h = g.shuffled(h, seed=int(tag[-1]) * 100 + k)
+        if tag.startswith("null"):
+            h = g.shuffled(h, seed=int(tag[4]) * 100 + k)
+        if tag.endswith("_gross"):                               # no costs: trade at the mid
+            for side in ("bid", "ask"):
+                for c in ("open", "high", "low", "close"):
+                    h[f"{side}_{c}"] = h[f"mid_{c}"]
         sig, fil, atr = g.blocks(h)
         arr = g.prepare(h)
         arr["atr"] = atr
@@ -128,10 +134,44 @@ def report():
         rows.append((tag, len(k)))
 
 
+
+def persistence():
+    """Does in-sample rank carry into out-of-sample, more on real data than on shuffled?"""
+    from scipy.stats import spearmanr
+    split = (IS_END - START).n + 1
+    for tag in ("real", "null1", "null2", "real_gross", "null1_gross"):
+        try:
+            z = np.load(f"cache/own_gen_{tag}.npz")
+        except FileNotFoundError:
+            continue
+        M, names = z["monthly"], z["names"]
+        ins, oos = metrics(M, None, slice(0, split)), metrics(M, None, slice(split, M.shape[1]))
+        ok = ins["trades"] >= 100
+        rho = spearmanr(ins["sharpe"][ok], oos["sharpe"][ok]).correlation
+        top = ok & (ins["sharpe"] >= np.percentile(ins["sharpe"][ok], 99))
+        print(f"{tag}: IS-OOS Sharpe rank corr {rho:+.3f}; top 1% by IS -> OOS median Sharpe "
+              f"{np.median(oos['sharpe'][top]):+.2f}, OOS > 0: {np.mean(oos['sharpe'][top] > 0):.0%}")
+        # ideas: average over the 60 exit settings
+        idea = np.array(["|".join(n.split("|")[:4]) for n in names])
+        df = pd.DataFrame({"idea": idea, "is": ins["sharpe"], "oos": oos["sharpe"], "isbp": ins["bp"],
+                           "oosbp": oos["bp"], "n": ins["trades"]})
+        g_ = df[df.n >= 100].groupby("idea").agg(is_sh=("is", "median"), oos_sh=("oos", "median"),
+                                                 is_bp=("isbp", "median"), oos_bp=("oosbp", "median"),
+                                                 exits=("is", "size"))
+        both = g_[(g_.is_sh > 0) & (g_.oos_sh > 0)]
+        print(f"   ideas: {len(g_)}; median-over-exits Sharpe > 0 in both halves: {len(both)} "
+              f"({len(both) / len(g_):.1%})")
+        if tag.startswith("real"):
+            pd.set_option("display.width", 200)
+            print(both.sort_values("oos_sh", ascending=False).head(15).round(2).to_string())
+
+
 if __name__ == "__main__":
     args = sys.argv[1:] or ["real"]
     if args == ["report"]:
         report()
+    elif args == ["persistence"]:
+        persistence()
     else:
         for tag in args:
             run(tag)

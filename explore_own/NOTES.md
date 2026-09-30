@@ -45,3 +45,37 @@ were picked from 192 pair-variants. They are not evidence.
 Published research reports the same effect: weekend gaps in FX tend to reverse.
 Development is too short (about 30 trades a year) to confirm it. The sealed
 2010–2020 period would add about 350 trades.
+
+## Strategy generator (`generator.py`, `gen_run.py`, `cheap_pairs.py`)
+
+86,400 strategies: 20 hourly signals × mean-reversion/momentum × 12 filters × 3
+modes × 60 exits. Every strategy runs on all 8 pairs at real bid/ask. The
+in-sample half is 2015–2020 and the out-of-sample half 2021–2026. The null is the
+same bars shuffled within each month, with the real spreads.
+
+**With costs, nothing works.**
+- 7 strategies passed the in-sample filter, all one idea (fade 6 down hours in the
+  afternoon). Out of sample their median Sharpe is −0.20.
+- No idea (signal × direction × filter × mode) has a median over its 60 exits that
+  is positive in both halves.
+
+**Before costs, there is real predictability.** Real data vs shuffled data:
+
+| | real | shuffled |
+|---|---|---|
+| top 1% in-sample: median out-of-sample Sharpe | +0.46 | −0.10 |
+| top 1% in-sample: share positive out of sample | 81% | 40% |
+| ideas positive in both halves | 72 (5%) | 13 (0.9%) |
+
+It is almost all short-term mean reversion: fading runs of down hours, and buying
+dips on Mondays.
+
+**It is smaller than the spread on every pair.** For the 72 persistent ideas, the
+median edge per trade ranges from 0.03 bp (USDJPY) to 0.56 bp (EURCHF). Costs range
+from 0.28 bp (EURUSD) to 1.9 bp (AUDNZD), so every pair nets negative. EURUSD is
+closest: 0.24 bp of edge against 0.28 bp of spread.
+
+Restricting to the cheapest pairs, chosen by spread alone, doesn't help. On
+EURUSD + USDJPY the best idea turns negative after 2020. Hourly FX mean reversion
+is real but smaller than the spread. It pays whoever earns the spread, not whoever
+crosses it.
