@@ -101,3 +101,28 @@ three pairs.
 The fixed-threshold intraday fade stays the family that fits his clues, but his
 chart doesn't carry enough information to single out a rule. Identifying it needs
 more from him: his trade count, win rate, average hold, or which three pairs.
+
+## Second search, built on his own descriptions (`match2.py`, `plot_gap_vs_theirs.py`, exploratory)
+
+His letters (kieranduff.com) say:
+- "no negatively skewed strategies", "minimum 1:1 risk-to-reward"
+- "one bullet in the chamber", fixed stops, daily closes
+
+His worked example: "if Friday is bearish, buy the Sunday open, 1:1 with a fixed
+stop". So every rule here has a fixed stop, a target ≥ 1:1, one position, and is
+flat by 16:45 New York. There are 312 combinations: previous-day fade, Asian-session
+fade, post-fix fade, weekend-gap fade, the Friday rule, hourly Bollinger and RSI.
+
+- **The weekend-gap fade matches his fingerprint better than chance.** It holds
+  the whole top 15, with the best at 1.20 against a shuffled 95th percentile of 0.99.
+  The match is mostly timing (+0.73): a fixed gap threshold fires more in volatile
+  weeks, and so does he.
+- **Its P&L is not his.** The best candidate loses in 2023–2025, while his curve
+  rises. Yearly correlation +0.41 over 6 years; Sharpe about 0.1, against about 1.4
+  for his digitised curve.
+- None of the 312 passes his own bar (Sharpe ≥ 1, 200+ trades).
+- The Friday rule translated to FX doesn't rank.
+
+What his rule probably shares with these: it fires on a fixed-size move, so it trades
+more when FX is volatile. It has positive skew and is flat daily. What we can't
+reproduce is his Sharpe of about 1.4.
