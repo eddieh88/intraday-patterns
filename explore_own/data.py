@@ -19,9 +19,8 @@ def load(pair, period="dev"):
         raise FileNotFoundError(f"no {period} files for {pair}")
     d = pd.concat([pd.read_parquet(f) for f in keep], ignore_index=True)
     if period == "early":
-        assert_early_sealed(d.timestamp)
-    ny = d.timestamp.dt.tz_localize("UTC").dt.tz_convert("America/New_York").dt.tz_localize(None)
-    d = d.drop(columns="timestamp").set_index(ny.rename("ts")).sort_index()
+        assert_early_sealed(d.ts_ny)
+    d = d.set_index(d.pop("ts_ny").rename("ts")).sort_index()
     d = d[~d.index.duplicated()]
     for c in ("open", "high", "low", "close"):
         d[f"mid_{c}"] = (d[f"bid_{c}"] + d[f"ask_{c}"]) / 2

@@ -1,7 +1,11 @@
-"""Download HistData.com free spot FX tick quotes (bid/ask, ms timestamps, fixed EST
-= UTC-5) and reduce each month to 1-minute bars:
+"""Download HistData.com free spot FX tick quotes (bid/ask, ms timestamps) and reduce
+each month to 1-minute bars:
   bid open/high/low/close, ask open/high/low/close, spread mean/max (pips), tick count
--> cache/histdata/<pair>_<YYYYMM>.parquet, with timestamps in UTC (bar start).
+-> cache/histdata/<pair>_<YYYYMM>.parquet, column `ts_ny`: New York local time (bar start).
+
+HistData documents its timestamps as EST without daylight saving, but US payroll
+releases (8:30 ET) appear at 08:30 in both winter and summer: the timestamps are New
+York local time WITH daylight saving. Checked 2026-09-30 on four 2021 payroll days.
 
 Resumable (finished months are skipped) and polite (one request every few seconds).
 Months before 2021 belong to the sealed early period (see lib/holdout.py) -- this
@@ -45,14 +49,14 @@ def fetch(pair, y, m, s):
     name = next(n for n in z.namelist() if n.endswith(".csv"))
     d = pd.read_csv(z.open(name), header=None, names=["t", "bid", "ask", "v"],
                     dtype={"t": str, "bid": float, "ask": float})
-    d["t"] = pd.to_datetime(d.t, format="%Y%m%d %H%M%S%f") + pd.Timedelta("5h")   # fixed EST -> UTC
+    d["t"] = pd.to_datetime(d.t, format="%Y%m%d %H%M%S%f")          # New York local time
     d["sp"] = (d.ask - d.bid) / pip(pair)
     g = d.set_index("t").resample("1min", label="left", closed="left")
     bars = pd.concat([g.bid.ohlc().add_prefix("bid_"), g.ask.ohlc().add_prefix("ask_"),
                       g.sp.mean().rename("spread_mean"), g.sp.max().rename("spread_max"),
                       g.bid.count().rename("ticks")], axis=1)
     bars = bars[bars.ticks > 0].astype({"ticks": "int32"})
-    bars.index.name = "timestamp"
+    bars.index.name = "ts_ny"
     tmp = dest.with_suffix(".tmp")
     bars.reset_index().to_parquet(tmp, index=False)
     tmp.rename(dest)

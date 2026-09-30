@@ -54,7 +54,7 @@ def test_histdata_loader_refuses_early_files(tmp_path, monkeypatch):
     (tmp_path / "cache" / "histdata").mkdir(parents=True)
     t = pd.date_range("2020-12-31 20:00", periods=3, freq="1min")
     cols = {f"{s}_{c}": 1.0 for s in ("bid", "ask") for c in ("open", "high", "low", "close")}
-    pd.DataFrame({"timestamp": t, **cols, "spread_mean": 1.0, "spread_max": 1.0, "ticks": 1}).to_parquet(
+    pd.DataFrame({"ts_ny": t, **cols, "spread_mean": 1.0, "spread_max": 1.0, "ticks": 1}).to_parquet(
         tmp_path / "cache" / "histdata" / "eurgbp_202012.parquet")
     monkeypatch.chdir(tmp_path)
     sys.path.insert(0, str(holdout.__file__).rsplit("/lib/", 1)[0] + "/explore_own")
