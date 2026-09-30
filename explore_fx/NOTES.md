@@ -25,3 +25,19 @@ parameter… literally just one rule". It came with an MT5 equity curve from 201
 winners. Same direction as development, but not confirmed.
 
 This finds a rule that is *consistent with* his curve, not his rule.
+
+## Against their curve (`plot_vs_theirs.py` → `figures/vs_theirs.png`)
+
+Their balance and margin use were digitised from the screenshot
+(`figures/their_curve_digitised.csv`), with dates interpolated between their
+axis labels. Ours is scaled to their monthly volatility and starts at their
+January 2021 balance.
+- **The resemblance is only that both rise.** Quarter by quarter, the changes are
+  uncorrelated: −0.00 over 16 quarters (2021 to 2025 Q1), and −0.32 over the 6
+  holdout quarters.
+- **Since the holdout began, the two diverge.** They rise in 2026, while ours
+  gives some back.
+- **Their margin use suggests at most three positions at once.** It never tops
+  about 4.4%, and it steps at about 1.5%, 2.6% and 4.3%. We hold up to 6.
+- Their x-axis counts trades, so stretches with no trades are squeezed out. Time
+  spent in the market can't be compared.
