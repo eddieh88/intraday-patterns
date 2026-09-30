@@ -45,4 +45,22 @@ The 0.5% and 2% neighbours are reported alongside, with no verdict.
 
 ## Results
 
-(Not yet run.)
+Pre-registration committed in 000e5b6, then the holdout was read once, on
+2026-09-30. A missing import was fixed first; it had crashed before loading any data.
+
+| | trades | win | mean ATR/trade (week-clustered) | Sharpe | verdict |
+|---|---|---|---|---|---|
+| development, 1% | 574 | 66% | +0.308 ± 0.143 (t +2.15) | 0.99 | chosen from 63 |
+| **holdout, 1%** | 141 | 68% | **+0.244 ± 0.339 (t +0.72)** | 0.63 | **FAIL** |
+| holdout, 0.5% | 449 | 62% | +0.058 ± 0.206 (t +0.28) | 0.35 | — |
+| holdout, 2% | 14 | 50% | −0.674 ± 0.583 (t −1.16) | −1.00 | — |
+
+The development t of 2.86 quoted above assumed independent trades. Clustered by
+week, as the currencies move together, it is 2.15.
+
+**Not confirmed, and not refuted either.**
+- The holdout has the same sign, a similar size (+0.24 against +0.31) and the
+  same win rate as development. But it has only 141 trades, and it is well within
+  noise.
+- It made money through 2025 Q3 and gave back 20 ATR in 2026 Q1.
+- The 0.5% neighbour is flat, and the 2% neighbour is negative.

@@ -12,6 +12,7 @@ flattering.
 | `selection.md` | Run. **No** — nothing at 09:45 picks the mornings a momentum entry pays; see `selection/RESULTS.md`. Which name-days, visible at 09:45, make a pattern-free momentum entry pay after costs. Holdout enforced by `lib/holdout.py`. |
 | `nq_mean_reversion.md` | Run. **Fails** on both periods: a long-only NQ 3-minute mean-reversion system posted on X makes −0.72 pts/trade in development and +1.05 (t 0.8) in the holdout, and the scale-in makes no difference to the mean. |
 | `nq_lunch_box.md` | Run. **Fails** on both periods: fading the edges of a narrow 12:00–12:30 NQ box loses −2.27 pts/trade in development (t −3.4) and −0.17 in the holdout. Adding either the trend bias or the ES exit makes no difference. |
+| `fx_distance_fade.md` | Run. **Not confirmed:** fading a fixed 1% distance from the 4-hour SMA(20) on six currency futures was the best of 63 one-rule variants in development (+0.31 ATR/trade, t 2.15). The holdout has the same sign but is within noise (+0.24, t 0.72). |
 | **`ifvg.md`** | **Written, never run.** Inverse fair value gaps on futures, specified against expert review of the geometry. |
 
 Only some of this project was pre-registered, and the rest is exploratory. That

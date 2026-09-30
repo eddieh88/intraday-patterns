@@ -24,7 +24,7 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
-from holdout import HOLDOUT_START
+from holdout import HOLDOUT_START, assert_sealed
 
 TICK = {"E6": 0.00005, "J1": 0.0000005, "B6": 0.0001, "A6": 0.00005, "N6": 0.00005, "E1": 0.00005}
 TF = {"H1": dict(rule="1h"), "H4": dict(rule="4h", offset="1h"), "D1": dict(rule="1D", offset="17h")}
