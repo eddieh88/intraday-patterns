@@ -126,3 +126,28 @@ fade, post-fix fade, weekend-gap fade, the Friday rule, hourly Bollinger and RSI
 What his rule probably shares with these: it fires on a fixed-size move, so it trades
 more when FX is volatile. It has positive skew and is flat daily. What we can't
 reproduce is his Sharpe of about 1.4.
+
+## Final round after the sealed test (`final_checks.py`, development 2015–2026 only)
+
+The sealed 2010–2014 test failed net and passed gross (`../prereg/own_fx_basket.md`). The
+expert's last checks:
+- **Cheaper pairs at ECN costs.** The region (previous close, 0.4%, 36 variants), with no
+  entries 17:00–17:20 New York:
+  - EUR+AUD+NZD: +211 bp/yr, 9/12 years, 0.43× return per max drawdown
+  - EUR+GBP+AUD: +116 bp/yr, 9/12 years, 0.46×
+
+  The second just clears the +100 bp bar, but only in development. There is no sealed
+  data left for this family.
+- **12-month dollar-trend filter (fixed in advance):** +29 and about 0 bp/yr. It removes
+  the big reversal winners. Not adopted.
+- **2008–2009 futures before costs:** −92 and −548 bp. The crisis losses are a trend
+  problem, not a cost problem.
+- **His trigger candidates** (stop 30, exit 17:15 New York, HistData spreads):
+  - Envelopes on H1 SMA50/100: all lose steadily, 19% Mondays, 2022/2021 ratio 1.1–2.7×
+  - the Asian-range fade at the London open: all lose steadily, 18% Mondays, ratio 1.0–1.9×
+
+  Not his.
+
+**Closed.** The fade pattern is real (gross positive in every year 2010–2026) but thin,
+about 1.5 bp per leg. It lives on a few big reversals a year and loses in persistent
+trends. Net, it is marginal even at ECN costs.

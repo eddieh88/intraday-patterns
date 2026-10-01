@@ -105,10 +105,10 @@ def run(trio):
                                 if j < 0:
                                     legs = []
                                     break
-                                legs.append((p, t[j], side * (px - e) / PIP[p], side * (px / e - 1) * 1e4))
-                            for p, tj, pips, bp in legs:
-                                rows.append((ref_name, W, X, C, S if S else 0, t[i], tj, pips, bp, p))
-    return pd.DataFrame(rows, columns=["ref", "W", "X", "close", "stop", "t_in", "t_out", "pips", "bp", "pair"])
+                                legs.append((p, t[j], side * (px - e) / PIP[p], side * (px / e - 1) * 1e4, side))
+                            for p, tj, pips, bp, sd in legs:
+                                rows.append((ref_name, W, X, C, S if S else 0, t[i], tj, pips, bp, p, sd))
+    return pd.DataFrame(rows, columns=["ref", "W", "X", "close", "stop", "t_in", "t_out", "pips", "bp", "pair", "side"])
 
 
 if __name__ == "__main__":
