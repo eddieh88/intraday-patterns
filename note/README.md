@@ -15,3 +15,12 @@ picked with hindsight, and its figures have since been rerun
 on a point-in-time universe (see `FINDINGS.md`). Every conclusion held and every
 figure moved by less than 0.003R, but the numbers in the note are not the
 current ones.
+
+## `setups.html` — the setups, drawn
+
+One card per setup this repo tested: a drawn candlestick example of the trigger,
+the exact rule as coded, and the verdict. Real detections from the data follow,
+pulled from `figures/`, `explore5m/figures/` and `explore_fut/figures/`. Open it
+from this folder so the image paths resolve.
+
+Published at https://claude.ai/artifact/TzLmj3UUC2U4RxRQB14J4f.

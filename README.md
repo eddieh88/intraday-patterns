@@ -191,6 +191,7 @@ artificial penalty — the comparison between them is what counts.
 | **[FINDINGS.md](FINDINGS.md)** | The full record: every claim, method, correction and limitation |
 | [experiments/](experiments/) | One script per claim, with an index mapping each to its result |
 | [note/open-tests.html](note/) | The same story written for an experienced day trader, definitions first |
+| [note/setups.html](note/setups.html) | Every setup drawn as a candlestick example, with the rule as coded and the verdict |
 | [figures/](figures/) | Charts per experiment, and rendered examples of what the detector found |
 | [selection/](selection/) | The 09:45 selection study: features, leak audit, results |
 | [retest/](retest/) | Do levels hold on the retest: detector, random-walk check, results |

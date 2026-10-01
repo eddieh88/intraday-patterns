@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setups Under Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a trading-desk specimen sheet. Each setup is a card with a drawn chart, the exact rule, and the verdict. */
+:root {
+  --bg: #f3f4f1;
+  --panel: #ffffff;
+  --fg: #1b1f23;
+  --muted: #5d6670;
+  --line: #d9ddd8;
+  --grid: #eceee9;
+  --up: #1f8a6a;
+  --dn: #d0563f;
+  --level: #2463b0;
+  --setup: #c98a12;
+  --setup-fill: rgba(201, 138, 18, .16);
+  --zone-fill: rgba(36, 99, 176, .13);
+  --ink: #1b1f23;
+  --fail: #b23a2a;
+  --fail-bg: #f8e3df;
+  --flip: #6b5a14;
+  --flip-bg: #f3ecd0;
+  --mom: #1d5e93;
+  --mom-bg: #dfeaf5;
+  --ok: #1f6f52;
+  --ok-bg: #dcefe6;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171a; --panel: #1c2024; --fg: #e6e8e5; --muted: #98a1a9; --line: #2e343a; --grid: #252a2f;
+    --up: #3fbf94; --dn: #ec7a62; --level: #6aa6ef; --setup: #e5a93a; --setup-fill: rgba(229, 169, 58, .18);
+    --zone-fill: rgba(106, 166, 239, .16); --ink: #e6e8e5;
+    --fail: #f19484; --fail-bg: #3a2320; --flip: #e3cf7d; --flip-bg: #34301b; --mom: #8dbdf0; --mom-bg: #1d2c3c; --ok: #79d3ad; --ok-bg: #19332a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171a; --panel: #1c2024; --fg: #e6e8e5; --muted: #98a1a9; --line: #2e343a; --grid: #252a2f;
+  --up: #3fbf94; --dn: #ec7a62; --level: #6aa6ef; --setup: #e5a93a; --setup-fill: rgba(229, 169, 58, .18);
+  --zone-fill: rgba(106, 166, 239, .16); --ink: #e6e8e5;
+  --fail: #f19484; --fail-bg: #3a2320; --flip: #e3cf7d; --flip-bg: #34301b; --mom: #8dbdf0; --mom-bg: #1d2c3c; --ok: #79d3ad; --ok-bg: #19332a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 40px 20px 72px; }
+header { max-width: 72ch; display: grid; gap: 12px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 800 clamp(34px, 6vw, 56px)/1 var(--display); font-stretch: 80%; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 8px; font: 12px/1.3 var(--mono); color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+h2 { font: 700 24px/1.15 var(--display); font-stretch: 85%; margin: 56px 0 6px; text-wrap: balance; }
+.sec-note { margin: 0 0 18px; color: var(--muted); max-width: 70ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card.bench { border-color: var(--mom); }
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+h3 { font: 700 18px/1.2 var(--display); font-stretch: 88%; margin: 0; }
+.pill { font: 500 11px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; padding: 5px 8px; border-radius: 99px; white-space: nowrap; }
+.fail { color: var(--fail); background: var(--fail-bg); }
+.flip { color: var(--flip); background: var(--flip-bg); }
+.mom { color: var(--mom); background: var(--mom-bg); }
+.ok { color: var(--ok); background: var(--ok-bg); }
+svg.chart { width: 100%; height: auto; display: block; }
+.rule { margin: 0; font-size: 14px; }
+.rule b { font-weight: 600; }
+.verdict { margin: 0; font: 13px/1.5 var(--mono); color: var(--fg); border-top: 1px solid var(--line); padding-top: 10px; font-variant-numeric: tabular-nums; }
+.verdict em { font-style: normal; color: var(--muted); }
+.real { display: grid; gap: 28px; }
+figure { margin: 0; display: grid; gap: 10px; }
+.plate { background: #ffffff; border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow-x: auto; }
+.plate img { display: block; width: 100%; min-width: 720px; height: auto; }
+figcaption { color: var(--muted); max-width: 80ch; font-size: 14px; }
+figcaption b { color: var(--fg); font-weight: 600; }
+code { font: 13px var(--mono); }
+/* SVG parts */
+.c-up { fill: var(--up); stroke: var(--up); }
+.c-dn { fill: var(--dn); stroke: var(--dn); }
+.wick-up { stroke: var(--up); }
+.wick-dn { stroke: var(--dn); }
+.g { stroke: var(--grid); }
+.t { fill: var(--muted); font: 10px var(--mono); }
+.t-level { fill: var(--level); font: 600 10px var(--mono); }
+.t-setup { fill: var(--setup); font: 600 10px var(--mono); }
+.t-ink { fill: var(--ink); font: 600 10px var(--mono); }
+.t-fail { fill: var(--fail); font: 600 10px var(--mono); }
+.t-ok { fill: var(--ok); font: 600 10px var(--mono); }
+.l-level { stroke: var(--level); stroke-width: 1.5; fill: none; }
+.l-setup { stroke: var(--setup); stroke-width: 1.5; fill: none; }
+.l-ink { stroke: var(--ink); stroke-width: 1.3; fill: none; }
+.l-fail { stroke: var(--fail); stroke-width: 1.3; fill: none; }
+.l-ok { stroke: var(--ok); stroke-width: 1.3; fill: none; }
+.l-muted { stroke: var(--muted); stroke-width: 1; fill: none; }
+.dash { stroke-dasharray: 4 3; }
+.b-setup { fill: var(--setup-fill); stroke: var(--setup); stroke-width: 1; }
+.b-zone { fill: var(--zone-fill); stroke: var(--level); stroke-width: 1; }
+.m-setup { fill: var(--setup); }
+.m-ink { fill: var(--ink); }
+@media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">intraday-patterns · what each experiment tests</div>
+    <h1>Setups under test</h1>
+    <p>Each chart is a drawn, idealized example of a setup as it's taught, so you can see exactly what the code looks for. Under each one is the rule we coded and what the backtest found. Real examples from the data are at the bottom.</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--up)"></i>up candle</span>
+      <span><i class="sw" style="background:var(--dn)"></i>down candle</span>
+      <span><i class="sw" style="background:var(--level)"></i>level / zone</span>
+      <span><i class="sw" style="background:var(--setup)"></i>the setup's trigger</span>
+      <span><i class="sw" style="background:var(--ink)"></i>entry</span>
+    </div>
+  </header>
+
+  <h2>The yardstick</h2>
+  <p class="sec-note">Every stock setup was compared with this rule. It uses the same entry bar, stop and target as the setup, but ignores the chart pattern.</p>
+  <div class="grid" id="g-bench"></div>
+
+  <h2>Opening-session claims (ICT and similar)</h2>
+  <p class="sec-note">Claims that the first hour follows a script. Tested on the 100 most-traded US stocks each day, 1,435 days of 5-minute bars.</p>
+  <div class="grid" id="g-open"></div>
+
+  <h2>Entry setups on stocks</h2>
+  <p class="sec-note">Each one is compared with a random entry in the same stock, same day, same direction, same risk, and with the momentum yardstick. Fills are at the next bar's open.</p>
+  <div class="grid" id="g-stock"></div>
+
+  <h2>Futures and FX strategies from posts and courses</h2>
+  <p class="sec-note">Later tests of specific systems people posted. Each had its rules written down before the holdout was opened.</p>
+  <div class="grid" id="g-fut"></div>
+
+  <h2>Real detections from the data</h2>
+  <p class="sec-note">These are renders the repo produced from actual 5-minute and 30-minute bars. The samples were picked at random, not by outcome. Looking at them caught mistakes that the statistics missed.</p>
+  <div class="real">
+    <figure>
+      <div class="plate"><img src="../figures/intraday_setups.png" alt="Six real 5-minute break-and-retest detections on MSFT, GOOGL, AMD and META, with the prior-day level in blue, the break in orange and the retest entry in black"></div>
+      <figcaption><b>Break and retest of prior-day levels.</b> Blue is the level known before 9:30, orange dotted is the break, black is the retest entry. An early version of this detector called the bar right after the break a "retest" 73% of the time. These pictures are how that was found. <code>figures/intraday_setups.png</code></figcaption>
+    </figure>
+    <figure>
+      <div class="plate"><img src="../figures/twoday_context.png" alt="Four two-day charts showing the prior session that defines the level and the trade day where it is broken and retested"></div>
+      <figcaption><b>Where the level comes from.</b> The prior session (left of the black line) sets the high or low. The trade day breaks it after 9:30 (grey dashed) and the entry comes on the retest. <code>figures/twoday_context.png</code></figcaption>
+    </figure>
+    <figure>
+      <div class="plate"><img src="../explore5m/figures/sample_soup.png" alt="Four Turtle Soup trades on 5-minute stock charts with entry, stop and 3R target marked"></div>
+      <figcaption><b>Turtle Soup, a failed break of the 20-bar channel.</b> Price pokes under the 20-bar low and closes back above it, so you buy. The stop is 0.25 ATR past the signal bar and the target is 3R. This was explored on the development period only and never taken to a registered test. <code>explore5m/figures/sample_soup.png</code></figcaption>
+    </figure>
+    <figure>
+      <div class="plate"><img src="../explore_fut/figures/sample_zones.png" alt="Four supply and demand zone trades on gold and currency futures with zone, break of structure, entry, stop and target"></div>
+      <figcaption><b>Supply and demand zones on futures.</b> Gold and four currency futures, 30-minute bars. The zone is the base of the impulse, and a 1-hour close past the last swing is the break of structure. Blue shading is the reward and grey is the risk. <code>explore_fut/figures/sample_zones.png</code></figcaption>
+    </figure>
+  </div>
+</div>
+
+<script>
+const W = 360, H = 200, PX = 10, TOP = 14, BOT = 20;
+
+function chart(spec) {
+  const c = spec.candles, n = c.length;
+  const lo = spec.y[0], hi = spec.y[1];
+  const step = (W - 2 * PX) / n, bw = Math.max(4, step * 0.56);
+  const X = i => PX + step * (i + 0.5);
+  const Y = v => TOP + (hi - v) / (hi - lo) * (H - TOP - BOT);
+  const s = [];
+  for (let k = 1; k < 4; k++) { const y = TOP + k * (H - TOP - BOT) / 4; s.push(`<line class="g" x1="${PX}" x2="${W - PX}" y1="${y}" y2="${y}"/>`); }
+  const under = [], over = [];
+  for (const o of spec.ov || []) {
+    const out = o.top ? over : under;
+    if (o.t === 'box') {
+      const x0 = X(o.x0) - step / 2, x1 = o.x1 === 'end' ? W - PX : X(o.x1) + step / 2;
+      out.push(`<rect class="${o.cls}" x="${x0}" y="${Y(o.y1)}" width="${x1 - x0}" height="${Y(o.y0) - Y(o.y1)}" rx="2"/>`);
+      if (o.label) out.push(`<text class="${o.tc || 't'}" x="${x0 + 3}" y="${o.below ? Y(o.y0) + 12 : Y(o.y1) - 4}">${o.label}</text>`);
+    } else if (o.t === 'h') {
+      const x0 = o.from == null ? PX : X(o.from) - step / 2, x1 = o.to == null ? W - PX : X(o.to) + step / 2;
+      out.push(`<line class="${o.cls}${o.dash ? ' dash' : ''}" x1="${x0}" x2="${x1}" y1="${Y(o.y)}" y2="${Y(o.y)}"/>`);
+      if (o.label) {
+        const left = o.at === 'left';
+        out.push(`<text class="${o.tc}" x="${left ? x0 + 2 : x1 - 2}" y="${Y(o.y) + (o.below ? 11 : -4)}" text-anchor="${left ? 'start' : 'end'}">${o.label}</text>`);
+      }
+    } else if (o.t === 'v') {
+      const x = X(o.x) + (o.half ? step / 2 : 0);
+      out.push(`<line class="${o.cls} dash" x1="${x}" x2="${x}" y1="${TOP - 6}" y2="${H - BOT}"/>`);
+      if (o.label) out.push(`<text class="t" x="${x + (o.anchor === 'end' ? -4 : 4)}" y="${H - BOT + 13}" text-anchor="${o.anchor || 'start'}">${o.label}</text>`);
+    } else if (o.t === 'path') {
+      out.push(`<polyline class="${o.cls}${o.dash ? ' dash' : ''}" points="${o.pts.map(([i, v]) => `${X(i)},${Y(v)}`).join(' ')}"/>`);
+      if (o.label) { const [i, v] = o.pts[o.li ?? o.pts.length - 1]; out.push(`<text class="${o.tc}" x="${X(i) + (o.dx || 0)}" y="${Y(v) + (o.dy || -6)}" text-anchor="${o.anchor || 'end'}">${o.label}</text>`); }
+    } else if (o.t === 'mark') {
+      const x = X(o.i), y = Y(o.y);
+      if (o.arrow) out.push(`<path class="m-ink" d="M${x - step / 2 - 1},${y} l-7,-4.5 v9 z"/>`);
+      else out.push(`<circle class="${o.mc || 'm-setup'}" cx="${x}" cy="${y}" r="3"/>`);
+      if (o.label) out.push(`<text class="${o.tc || 't-setup'}" x="${x + (o.dx ?? 0)}" y="${y + (o.dy ?? -8)}" text-anchor="${o.anchor || 'middle'}">${o.label}</text>`);
+    } else if (o.t === 'text') {
+      out.push(`<text class="${o.tc || 't'}" x="${X(o.i)}" y="${Y(o.y)}" text-anchor="${o.anchor || 'middle'}">${o.label}</text>`);
+    }
+  }
+  s.push(...under);
+  c.forEach(([o, h, l, cl], i) => {
+    const up = cl >= o, x = X(i);
+    s.push(`<line class="${up ? 'wick-up' : 'wick-dn'}" x1="${x}" x2="${x}" y1="${Y(h)}" y2="${Y(l)}" stroke-width="1.2"/>`);
+    const y0 = Y(Math.max(o, cl)), hh = Math.max(1.2, Math.abs(Y(o) - Y(cl)));
+    s.push(`<rect class="${up ? 'c-up' : 'c-dn'}" x="${x - bw / 2}" y="${y0}" width="${bw}" height="${hh}" rx="1"/>`);
+  });
+  s.push(...over);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.aria}">${s.join('')}</svg>`;
+}
+
+const PILL = { fail: 'Failed', flip: 'Coin flip', mom: '= Momentum', ok: 'Real, no edge', opp: 'Opposite', size: 'Depends on size', nc: 'Not confirmed', bench: 'Benchmark' };
+const PCLS = { fail: 'fail', flip: 'flip', mom: 'mom', ok: 'ok', opp: 'fail', size: 'flip', nc: 'flip', bench: 'mom' };
+
+function card(d) {
+  return `<article class="card${d.v === 'bench' ? ' bench' : ''}">
+    <div class="head"><h3>${d.name}</h3><span class="pill ${PCLS[d.v]}">${PILL[d.v]}</span></div>
+    ${chart(d.chart)}
+    <p class="rule"><b>Rule tested.</b> ${d.rule}</p>
+    <p class="verdict">${d.result}</p>
+  </article>`;
+}
+
+const ORB_RANGE = [[100,100.8,99.2,100.5],[100.5,101,99.8,99.9],[99.9,100.4,99.1,99.4],[99.4,100.3,99.2,100.1],[100.1,100.9,99.9,100.6],[100.6,100.95,100.1,100.4]];
+
+const SETS = {
+  'g-bench': [
+    { name: 'Momentum rule', v: 'bench',
+      rule: 'At the setup\'s entry bar, go long if price is up over the last 30 minutes and short if it\'s down. Nothing else.',
+      result: 'Matched or beat every stock setup. <em>The setups are a way of noticing this, not a separate source of edge.</em>',
+      chart: { y: [99, 103.4], aria: 'Six rising bars bracketed as the last 30 minutes, then a long entry',
+        candles: [[99.6,99.9,99.3,99.5],[99.5,99.8,99.2,99.7],[99.7,100.3,99.6,100.2],[100.2,100.5,99.9,100.1],[100.1,100.8,100,100.7],[100.7,101.1,100.5,100.9],[100.9,101.4,100.8,101.3],[101.3,101.5,100.9,101.1],[101.1,101.9,101,101.8],[101.8,102.4,101.6,102.2],[102.2,102.6,101.9,102.1],[102.1,102.9,102,102.8]],
+        ov: [ { t: 'box', cls: 'b-setup', x0: 1, x1: 6, y0: 99.2, y1: 101.4, label: 'last 30 min: up', tc: 't-setup', below: true },
+              { t: 'h', cls: 'l-level', dash: true, y: 99.7, from: 1, to: 6 },
+              { t: 'mark', arrow: true, i: 7, y: 101.3, label: 'go long', tc: 't-ink', dx: -14, dy: -10, anchor: 'end' } ] } },
+  ],
+  'g-open': [
+    { name: 'Judas swing', v: 'flip',
+      rule: 'The 9:30–10:00 move is a fake-out. The 10:00–11:00 move goes the other way.',
+      result: 'Reversed <b>50.5%</b> of the time. <em>A coin flip.</em>',
+      chart: { y: [98.3, 101.6], aria: 'Price falls from 9:30 to 10:00 then rallies past the open',
+        candles: [[100,100.2,99.6,99.7],[99.7,99.8,99.2,99.3],[99.3,99.5,98.9,99.0],[99,99.2,98.6,98.8],[98.8,99.4,98.7,99.3],[99.3,99.9,99.2,99.8],[99.8,100.3,99.7,100.2],[100.2,100.6,100,100.5],[100.5,101,100.4,100.9],[100.9,101.2,100.6,101.1]],
+        ov: [ { t: 'v', cls: 'l-muted', x: 0, half: false, label: '9:30' }, { t: 'v', cls: 'l-muted', x: 3, half: true, label: '10:00' },
+              { t: 'path', cls: 'l-fail', dash: true, pts: [[0,100.4],[3,99.3]], label: '"fake" move', tc: 't-fail', li: 0, anchor: 'start', dx: 6, dy: -4 },
+              { t: 'path', cls: 'l-ok', dash: true, pts: [[4,99.7],[9,101.5]], label: '"real" move', tc: 't-ok', dy: 12, dx: -10 } ] } },
+    { name: 'Opening-range sweep', v: 'opp',
+      rule: 'Price pokes above the 9:30–10:00 range, gets "swept" back inside, then reverses down.',
+      result: 'The opposite. <b>Breaks of the opening range tended to keep going.</b>',
+      chart: { y: [98.6, 102.6], aria: 'A wick pokes above the opening range; the taught path goes down, the common outcome goes up',
+        candles: [...ORB_RANGE, [100.4,101.5,100.3,100.6],[100.6,100.7,100,100.1],[100.1,100.2,99.5,99.6]],
+        ov: [ { t: 'box', cls: 'b-setup', x0: 0, x1: 5, y0: 99.1, y1: 101, label: 'opening range', tc: 't-setup', below: true },
+              { t: 'mark', i: 6, y: 101.5, label: 'sweep', dy: -8 },
+              { t: 'text', i: 8, y: 99.1, label: 'taught', tc: 't-fail', anchor: 'middle' },
+              { t: 'path', cls: 'l-ok', dash: true, pts: [[6,100.8],[7,101.3],[8,101.7],[9,102.3]], label: 'usual', tc: 't-ok', dx: -4, dy: -6 } ] } },
+    { name: 'Gap fill', v: 'size',
+      rule: 'A stock that opens above or below yesterday\'s close comes back to that close the same day.',
+      result: 'Small gaps filled <b>69%</b> of the time. Big gaps filled <b>27%</b>.',
+      chart: { y: [99.2, 101.7], aria: 'Prior day closes at 100, next day gaps up to 101.2 and drifts back to 100',
+        candles: [[99.5,99.9,99.4,99.8],[99.8,100.1,99.6,100],[101.2,101.4,100.9,101.0],[101,101.1,100.6,100.7],[100.7,100.9,100.3,100.4],[100.4,100.5,99.95,100.1],[100.1,100.4,100,100.3]],
+        ov: [ { t: 'v', cls: 'l-muted', x: 1, half: true, label: 'overnight' },
+              { t: 'h', cls: 'l-level', y: 100, label: 'prior close', tc: 't-level', at: 'left', below: true },
+              { t: 'box', cls: 'b-setup', x0: 2, x1: 2, y0: 100, y1: 101.2, label: 'gap', tc: 't-setup' },
+              { t: 'mark', i: 5, y: 99.95, label: 'filled', dy: 14, mc: 'm-ink', tc: 't-ink' } ] } },
+    { name: 'Pre-market sets the day', v: 'flip',
+      rule: 'Whichever way the pre-market session moves, the regular session follows.',
+      result: 'Right <b>49.2%</b> of the time. <em>A coin flip.</em>',
+      chart: { y: [98.8, 101.6], aria: 'Pre-market drifts up; at 9:30 the regular session could go either way',
+        candles: [[99.6,99.8,99.5,99.7],[99.7,99.9,99.6,99.85],[99.85,100.1,99.8,100.0],[100,100.2,99.95,100.15],[100.15,100.35,100.1,100.3],[100.3,100.8,99.9,100.0],[100,100.1,99.5,99.6],[99.6,99.7,99.2,99.3]],
+        ov: [ { t: 'box', cls: 'b-zone', x0: 0, x1: 4, y0: 99.45, y1: 100.4, label: 'pre-market: up', tc: 't-level' },
+              { t: 'v', cls: 'l-muted', x: 4, half: true, label: '9:30' },
+              { t: 'path', cls: 'l-ok', dash: true, pts: [[5,100.5],[7,101.3]], label: 'claimed', tc: 't-ok', dy: 12, dx: 8 },
+              { t: 'text', i: 7, y: 98.95, label: 'just as often', tc: 't-fail', anchor: 'end' } ] } },
+  ],
+  'g-stock': [
+    { name: 'Opening range breakout', v: 'mom',
+      rule: 'Mark the 9:30–10:00 high and low. Trade in the direction of the first close outside it.',
+      result: '+0.0188R before costs. Momentum rule: +0.0188R. <b>Identical on every trade.</b> <em>An upward break is price going up, so both rules always pick the same side.</em>',
+      chart: { y: [98.8, 103.6], aria: 'Six bars form an opening range, then a close above it triggers a long',
+        candles: [...ORB_RANGE, [100.4,101.7,100.3,101.6],[101.6,102.2,101.3,102.0],[102,102.1,101.5,101.7],[101.7,102.6,101.6,102.4],[102.4,103,102.2,102.8],[102.8,103.3,102.5,103.1]],
+        ov: [ { t: 'box', cls: 'b-setup', x0: 0, x1: 5, y0: 99.1, y1: 101, label: 'opening range 9:30–10:00', tc: 't-setup', below: true },
+              { t: 'h', cls: 'l-setup', dash: true, y: 101, from: 5, to: 7 },
+              { t: 'mark', i: 6, y: 101.7, label: 'close above', dy: -8 },
+              { t: 'mark', arrow: true, i: 7, y: 101.6, label: 'entry', tc: 't-ink', dx: 14, dy: 16, anchor: 'start' } ] } },
+    { name: 'Break and retest', v: 'flip',
+      rule: 'Price closes through a level, moves away, comes back to touch it and closes back on the far side. Enter on that close. The retest study used prior-day and pre-market levels. E17 used the pre-market high and low only.',
+      result: 'Retest study: across 187,000 retests, real levels held <b>50.2%</b> and fake levels at the same distance <b>50.3%</b>. <em>E17 trade, before costs: +0.0075R (t 0.68).</em>',
+      chart: { y: [98, 102.6], aria: 'Price breaks above the prior-day high, rises, pulls back to touch it, and continues',
+        candles: [[98.6,99.2,98.4,99.0],[99,99.6,98.8,99.5],[99.5,99.9,99.2,99.7],[99.7,100.9,99.6,100.8],[100.8,101.4,100.6,101.3],[101.3,101.9,101.1,101.7],[101.7,101.8,101.0,101.1],[101.1,101.2,100.4,100.5],[100.5,100.7,99.98,100.3],[100.3,101.1,100.2,101],[101,101.8,100.9,101.6],[101.6,102.3,101.4,102.1]],
+        ov: [ { t: 'h', cls: 'l-level', y: 100, label: 'level', tc: 't-level', at: 'left', below: true },
+              { t: 'mark', i: 3, y: 100.8, label: 'break', dx: -2, dy: -12 },
+              { t: 'mark', i: 8, y: 99.98, label: 'retest', dy: 14 },
+              { t: 'mark', arrow: true, i: 9, y: 100.3, label: 'entry', tc: 't-ink', dx: 6, dy: 22, anchor: 'start' } ] } },
+    { name: 'VWAP reclaim', v: 'mom',
+      rule: 'After trading below the day\'s volume-weighted average price, price closes back above it. Go long.',
+      result: '+0.0210R before costs. Momentum rule on the same trades: +0.0207R. <em>Difference +0.0003R, not significant.</em>',
+      chart: { y: [98.9, 102.1], aria: 'Price trades below the VWAP line, then closes back above it',
+        candles: [[100.8,101,100.2,100.3],[100.3,100.5,99.6,99.8],[99.8,100,99.3,99.5],[99.5,99.9,99.2,99.7],[99.7,100,99.4,99.6],[99.6,100.1,99.5,100.0],[100,100.9,99.9,100.8],[100.8,101.2,100.5,101],[101,101.5,100.8,101.4],[101.4,101.6,101,101.2],[101.2,101.9,101.1,101.7]],
+        ov: [ { t: 'path', cls: 'l-level', pts: [[0,100.6],[1,100.45],[2,100.3],[3,100.2],[4,100.15],[5,100.12],[6,100.15],[7,100.22],[8,100.3],[9,100.38],[10,100.45]], label: 'VWAP', tc: 't-level', li: 10, dy: 14, dx: 6 },
+              { t: 'mark', i: 6, y: 100.9, label: 'close back above', dy: -8 },
+              { t: 'mark', arrow: true, i: 7, y: 100.8, label: 'entry', tc: 't-ink', dx: 8, dy: 22, anchor: 'start' } ] } },
+    { name: 'Pullback after a run', v: 'mom',
+      rule: 'Once the day\'s high so far is more than 0.5% above the open, buy at the close of a red bar, up to three times a day. Shorts mirror it. It doesn\'t check that the run is still on.',
+      result: '+0.0213R before costs (t 2.73), the only setup clearly above zero. Momentum over the last 60 min: +0.0214R. <em>Costs are several times the edge.</em>',
+      chart: { y: [99.6, 102.1], aria: 'Five rising bars, one red pullback bar, then continuation',
+        candles: [[100,100.3,99.9,100.25],[100.25,100.5,100.1,100.45],[100.45,100.8,100.4,100.7],[100.7,101.0,100.6,100.95],[100.95,101.2,100.85,101.1],[101.1,101.15,100.7,100.8],[100.8,101.3,100.75,101.25],[101.25,101.6,101.1,101.5],[101.5,101.7,101.3,101.4],[101.4,101.9,101.35,101.8]],
+        ov: [ { t: 'h', cls: 'l-muted', y: 100, label: 'open', tc: 't', at: 'left', below: true },
+              { t: 'h', cls: 'l-level', dash: true, y: 100.5, label: '+0.5% from open', tc: 't-level', at: 'right', below: true },
+              { t: 'mark', i: 5, y: 100.7, label: 'red bar: buy its close', dy: 15 },
+              { t: 'mark', arrow: true, i: 5, y: 100.8, label: 'entry', tc: 't-ink', dx: -12, dy: -10, anchor: 'end' } ] } },
+    { name: 'Fair value gap', v: 'ok',
+      rule: 'Three candles where the first candle\'s high and the third candle\'s low don\'t overlap. Enter when price comes back to tap the gap.',
+      result: 'The gaps fill as advertised: touched <b>78.7%</b>, half-filled 68.4%, fully filled 46.1%. <em>Trading the tap: −0.109R vs a random entry\'s −0.121R.</em>',
+      chart: { y: [99.2, 102.6], aria: 'A large up candle leaves a gap between candle one high and candle three low; price later returns into it',
+        candles: [[99.6,100,99.4,99.8],[99.8,100.1,99.6,100],[100,100.4,99.8,100.3],[100.3,101.8,100.2,101.7],[101.7,102.3,101.1,102.1],[102.1,102.4,101.8,101.9],[101.9,102,101.4,101.5],[101.5,101.6,100.9,101.0],[101,101.2,100.7,100.9],[100.9,101.6,100.8,101.5],[101.5,102,101.4,101.9]],
+        ov: [ { t: 'box', cls: 'b-setup', x0: 2, x1: 'end', y0: 100.4, y1: 101.1, label: 'gap: candle 1 high → candle 3 low', tc: 't-setup', below: true },
+              { t: 'text', i: 2, y: 99.55, label: '1', tc: 't' }, { t: 'text', i: 3, y: 99.55, label: '2', tc: 't' }, { t: 'text', i: 4, y: 99.55, label: '3', tc: 't' },
+              { t: 'mark', i: 7, y: 101.0, label: 'tap', dx: 0, dy: -24, tc: 't-ink', mc: 'm-ink' } ] } },
+  ],
+  'g-fut': [
+    { name: 'Supply and demand zone', v: 'fail',
+      rule: 'Gold and currency futures. The zone is the base that an impulse launched from. Wait for a break of structure, then buy the return to the zone. Stop goes past the swing low and the target is the impulse high.',
+      result: 'Zone trades lost <b>0.28–0.37R</b> per trade more than random entries with the same stop and target. <em>Failed on development and holdout.</em>',
+      chart: { y: [99.3, 103], aria: 'A demand zone at the base, an impulse that breaks structure, a return to the zone, and a long entry',
+        candles: [[100.8,101,100.4,100.5],[100.5,100.6,100,100.1],[100.1,100.3,99.8,100.2],[100.2,101.2,100.1,101.1],[101.1,102,101,101.9],[101.9,102.6,101.8,102.5],[102.5,102.6,101.9,102],[102,102.1,101.2,101.3],[101.3,101.4,100.25,100.5],[100.5,101.2,100.4,101.1],[101.1,101.9,101,101.8],[101.8,102.5,101.7,102.4]],
+        ov: [ { t: 'box', cls: 'b-zone', x0: 1, x1: 'end', y0: 99.8, y1: 100.3, label: 'demand zone', tc: 't-level', below: true },
+              { t: 'h', cls: 'l-setup', dash: true, y: 101.5, from: 0, to: 4, label: 'break of structure', tc: 't-setup', at: 'left' },
+              { t: 'h', cls: 'l-ok', dash: true, y: 102.6, from: 5, label: 'target', tc: 't-ok', below: false },
+              { t: 'h', cls: 'l-fail', dash: true, y: 99.65, from: 8, label: 'stop', tc: 't-fail', below: true },
+              { t: 'mark', arrow: true, i: 8, y: 100.3, label: 'entry', tc: 't-ink', dx: -14, dy: -10, anchor: 'end' } ] } },
+    { name: 'NQ mean reversion', v: 'fail',
+      rule: 'NQ 3-minute bars, 10:00–12:00, choppy market only. Buy limit 1 ATR below the signal close. Target the middle of the signal candle. Stop 1.5 ATR, or exit after 15 minutes.',
+      result: 'Development −0.72 pts/trade (t −1.4). Holdout +1.05 (t 0.8). <em>The 57–63% win rate comes from where the target and stop sit, not from a bounce.</em>',
+      chart: { y: [98.3, 101.6], aria: 'A big red signal candle, a limit buy filled one ATR lower, and a bounce to the candle midpoint',
+        candles: [[100.5,100.9,100.2,100.7],[100.7,101,100.4,100.5],[100.5,100.9,100.3,100.8],[100.8,101.3,100.7,101.1],[101.1,101.2,100,100.1],[100.1,100.2,99.0,99.3],[99.3,100.0,99.2,99.9],[99.9,100.7,99.8,100.6],[100.6,100.8,100.3,100.4]],
+        ov: [ { t: 'mark', i: 4, y: 101.2, label: 'signal candle', dy: -8 },
+              { t: 'h', cls: 'l-ok', dash: true, y: 100.6, from: 4, label: 'target: mid of signal', tc: 't-ok' },
+              { t: 'h', cls: 'l-ink', y: 99.1, from: 4, label: 'buy limit: 1 ATR below', tc: 't-ink', below: true },
+              { t: 'h', cls: 'l-fail', dash: true, y: 98.6, from: 4, label: 'stop: 1.5 ATR', tc: 't-fail', below: true } ] } },
+    { name: 'NQ Lunch Box', v: 'fail',
+      rule: 'Take the 12:00–12:30 range, only if it\'s 15 bp wide or less. Fade touches of its edges. Exit when the box breaks.',
+      result: 'Development −2.27 pts/trade (t −3.4), an <b>18%</b> win rate. <em>74 of 118 trades ended with a close outside the box, a median of 2 minutes after entry.</em>',
+      chart: { y: [99.7, 101.2], aria: 'A narrow midday box; price touches the top, a short is taken, and price breaks out upward',
+        candles: [[100.1,100.35,100,100.3],[100.3,100.4,100.1,100.15],[100.15,100.3,100.0,100.25],[100.25,100.38,100.1,100.12],[100.12,100.3,100.02,100.28],[100.28,100.4,100.2,100.3],[100.3,100.42,100.25,100.38],[100.38,100.9,100.35,100.85],[100.85,101.1,100.7,101]],
+        ov: [ { t: 'box', cls: 'b-setup', x0: 0, x1: 5, y0: 100, y1: 100.4, label: 'box 12:00–12:30', tc: 't-setup', below: true },
+              { t: 'h', cls: 'l-setup', dash: true, y: 100.4, from: 5 }, { t: 'h', cls: 'l-setup', dash: true, y: 100, from: 5 },
+              { t: 'mark', i: 6, y: 100.42, label: 'short the edge', tc: 't-ink', mc: 'm-ink', dy: 22 },
+              { t: 'mark', i: 7, y: 100.9, label: 'usually breaks', tc: 't-fail', mc: 'm-ink', dy: -8, anchor: 'end' } ] } },
+    { name: 'FX distance fade', v: 'nc',
+      rule: 'Currency futures, 4-hour bars. When the close is more than 1% from the 20-bar average, fade it and exit back at the average.',
+      result: 'Best of 63 variants in development. Holdout +0.24 ATR/trade (t 0.7): <em>same sign, not confirmed.</em> A related evening dollar-basket fade made +237 bp/yr before costs but −30 bp/yr after, on the sealed 2010–2014 test.',
+      chart: { y: [98.6, 101.1], aria: 'Price stretches more than one percent below its 20-bar average, a long is taken, and price returns to the average',
+        candles: [[100.6,100.8,100.3,100.4],[100.4,100.5,100,100.1],[100.1,100.2,99.7,99.8],[99.8,99.9,99.4,99.5],[99.5,99.55,98.9,99.1],[99.1,99.6,99,99.5],[99.5,100,99.4,99.9],[99.9,100.4,99.8,100.3],[100.3,100.5,100,100.2]],
+        ov: [ { t: 'path', cls: 'l-level', pts: [[0,100.7],[1,100.6],[2,100.5],[3,100.42],[4,100.35],[5,100.3],[6,100.27],[7,100.25],[8,100.24]], label: '20-bar average', tc: 't-level', li: 0, anchor: 'start', dx: -4, dy: -8 },
+              { t: 'path', cls: 'l-level', dash: true, pts: [[0,99.7],[1,99.6],[2,99.5],[3,99.42],[4,99.35],[5,99.3],[6,99.27],[7,99.25],[8,99.24]], label: '−1%', tc: 't-level', li: 8, dy: 12, dx: 8 },
+              { t: 'mark', i: 4, y: 99.1, label: 'close past −1%: buy', dy: 18, anchor: 'start', dx: -10 },
+              { t: 'mark', i: 7, y: 100.25, label: 'exit at average', tc: 't-ok', mc: 'm-ink', dy: -10 } ] } },
+  ],
+};
+
+for (const [id, list] of Object.entries(SETS)) document.getElementById(id).innerHTML = list.map(card).join('');
+</script>
+</body>
+</html>
