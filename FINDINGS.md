@@ -415,7 +415,9 @@ rather than R, but they were measured on the hindsight pool.
    tested are overwhelmingly taught on ES/NQ/SPY. `etf_5min` and `futures_5min`
    have since been downloaded (3.2 GB and 511 MB); ES was verified
    back-adjusted, with large overnight gaps no more concentrated in roll
-   windows than chance (25 observed vs 21 expected).
+   windows than chance (25 observed vs 21 expected). *Update, Sept 2026:* two
+   NQ systems and several FX strategies were later tested on futures and spot
+   FX (README part 9). The stock setups themselves were not rerun on futures.
 11. **The entry rule was the wrong object.** E18 shows no entry beats a naive
    momentum rule at the same bar. If the level's job is to set the RISK UNIT
    rather than the direction, every test in this log aims at the wrong target.

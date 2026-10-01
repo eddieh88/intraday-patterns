@@ -25,6 +25,11 @@ period, including ones that were later delisted.
   chart and just asks "has price gone up or down over the last 30 minutes?"
   does exactly as well. The setups are a way of noticing momentum, not a source
   of it.
+- **Futures and FX told the same story (September 2026).** Two NQ systems posted
+  online failed on unseen data. Hourly FX does mean-revert, but by less than the
+  spread on every pair we tested. Our own FX strategy, built on that reversion,
+  made money before costs in every year from 2010 to 2026 and failed after
+  costs on sealed 2010–2014 data.
 
 ## The story
 
@@ -156,6 +161,22 @@ fake ones 50.3%. The difference is +0.24bp over the next hour, with a 95%
 interval of −0.35 to +0.84bp. No level type, and neither support nor
 resistance, stands out. Details in [retest/RESULTS.md](retest/RESULTS.md).
 
+### 9. Beyond stocks: NQ futures and FX
+
+The same approach, applied to strategies that traders posted on X, and to our own.
+
+| what | result | where |
+|---|---|---|
+| A long-only NQ dip-buying system, as posted | Loses on unseen data. Before costs it makes exactly zero; its 57% win rate comes from the bracket's geometry, not from an edge | [explore_nq/](explore_nq/NOTES.md), [prereg](prereg/nq_mean_reversion.md) |
+| The same author's NQ "Lunch Box" range fade | Fails: price reaching the edge of a quiet range usually breaks through | [prereg](prereg/nq_lunch_box.md) |
+| Reverse-engineering a one-rule FX strategy from its author's chart and Darwinex statistics | The rule's shape was established: trades in groups on the hourly bar, a fixed close at 17:00 New York, a ~30-pip stop, mostly scratches. The exact rule was not | [explore_fx/](explore_fx/NOTES.md), [prereg](prereg/fx_distance_fade.md), [prereg](prereg/fx_night_scalper.md) |
+| A StrategyQuant-style generator: 86,400 rules on 8 spot FX pairs, at real bid/ask, against shuffled data | Before costs, hourly FX mean reversion is real: persistence beats shuffled data. It is smaller than the spread on every pair | [explore_own/](explore_own/NOTES.md) |
+| Our own FX strategy: fade a 0.4% dollar move after the 17:00 New York open, on EURUSD, AUDUSD and NZDUSD | **Fails** on sealed 2010–2014 data: −30 bp/yr net. Gross it is +237 bp/yr, positive in every year from 2010 to 2026. It lives on a few big reversals a year | [prereg](prereg/own_fx_basket.md) |
+
+The FX data is HistData spot tick quotes (bid/ask), reduced to one-minute bars. Its
+timestamps are New York local time with daylight saving, not EST as documented. Within
+this repo, 2010–2014 was sealed until the one test above.
+
 ## One pattern claim did check out
 
 **Fair value gaps fill at roughly the rates people say they do.**
@@ -175,9 +196,10 @@ artificial penalty — the comparison between them is what counts.
 
 - **News.** One strategy we tested says: never trade on news days, only after.
   We have no news calendar, so we couldn't test that version.
-- **Index futures.** Almost all of these setups are taught on ES, NQ and SPY. We
-  tested individual stocks. The futures data is downloaded; **no test has been
-  run on it yet.**
+- **Index futures, partly.** The stock tests above don't cover ES, NQ or SPY,
+  where most of these setups are taught. Two NQ systems were tested later
+  ([part 9](#9-beyond-stocks-nq-futures-and-fx)); the setups from parts 1–8 were
+  not rerun on futures.
 - **Order flow.** We see 5-minute price bars only — not the order book or
   individual trades.
 - **The level's real job, now tested.** If a support/resistance line tells you
@@ -199,6 +221,9 @@ artificial penalty — the comparison between them is what counts.
 | [selection/](selection/) | The 09:45 selection study: features, leak audit, results |
 | [retest/](retest/) | Do levels hold on the retest: detector, random-walk check, results |
 | [prereg/](prereg/) | Rules written before the tests — one (inverse fair value gaps) not yet run |
+| [explore_nq/](explore_nq/NOTES.md) | NQ futures: the posted dip-buying system, taken apart, and the Lunch Box |
+| [explore_fx/](explore_fx/NOTES.md) | FX: reverse-engineering a posted one-rule strategy, the forensics, the searches |
+| [explore_own/](explore_own/NOTES.md) | Our own FX strategy work: spreads, the generator, what the edge is |
 | [lib/](lib/), [data/](data/), [render/](render/), [diagnostics/](diagnostics/) | Shared code, data download, chart rendering, one-off checks — each with its own README |
 
 ## Words used here

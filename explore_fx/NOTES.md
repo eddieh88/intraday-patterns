@@ -1,4 +1,25 @@
-# One-rule FX mean reversion
+# FX: reverse-engineering a posted one-rule strategy, and our own
+
+**Summary (closed 2026-10-01).** Read this first; the sections below are the
+chronological record.
+- **His strategy:** the rule was not identified; its shape was. Trades come in groups
+  of pairs opened on an hourly bar in the European morning. They close at a fixed time,
+  the 17:00 New York server boundary (delayed by his spread filter). The stop is about
+  30 pips, there is no target, results are scratch-heavy, sizing is risk-based, the
+  trades are Monday-heavy, and they run 4–5 per pair per month (about 5× that in
+  volatile years). Evidence: the MT5 chart's labels, steps and margin panel
+  (`forensics.py`), and Darwinex tooltips.
+- **Searches:** every candidate family either matched his timing or his profits, never
+  both. Matching the tooltip pips to actual July 2026 trades is at chance level.
+- **Our own sibling:** the evening dollar-basket fade (`basket_match.py`). It failed
+  the sealed 2010–2014 test net of costs and is gross-positive in every year
+  (`../prereg/own_fx_basket.md`).
+- **His book (Darwinex tooltips):** at least five clock-exit strategies across FX, a
+  probable index, gold and a quiet cross, all sized to the same risk.
+- **The full write-up for outside readers** is the shared document "Reverse-engineering
+  a one-rule FX mean-reversion strategy".
+
+## Initial search: one-rule FX mean reversion
 
 What could be behind an X post: "best mean reversion strategy I've ever built.
 Multi-asset (FX), one timeframe, same parameters/management, one specific
