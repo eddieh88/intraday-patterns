@@ -62,4 +62,29 @@ Measured on the portfolio's daily P&L in bp.
 
 ## Results
 
-(Not yet run.)
+Pre-registration committed in 360f347. The sealed data was then read once, on
+2026-09-30. A timestamp-unit bug (microseconds read as nanoseconds) broke the
+futures cross-check on the first pass. It was fixed and only the futures part was
+rerun. The spot verdict comes from the first pass.
+
+**Verdict: FAIL** (mean ≤ 0).
+
+| spot, 2010–2014 | 2010 | 2011 | 2012 | 2013 | 2014 | mean bp/yr | years + | return / max DD |
+|---|---|---|---|---|---|---|---|---|
+| **net of the HistData spread (decision)** | −171 | −427 | −39 | +183 | +300 | **−30** | 2/5 | −0.03× |
+| gross (at the mid) | +453 | +4 | +102 | +296 | +373 | +237 | 5/5 | 0.50× |
+
+- **Split, net:** 2010–2012 −212 bp/yr; 2013–2014 +241 bp/yr. Gross: +186 and +335.
+- **Without the 3 best entries per year:** net −339 bp/yr; gross −20.
+- **CME futures, 2008–2014 (cross-check, 1 pip per leg):** −47 bp/yr, 4 of 7 years
+  positive. 2008 −205, 2009 −697, 2010 +99, 2011 −258, 2012 +62, 2013 +392, 2014 +264.
+
+**Reading.**
+- **The fail is cost-driven, not a missing pattern.** Before costs, the fade made
+  money in every year from 2010 to 2014 (+237 bp/yr). It also made money from 2015 to
+  2026. The 2010–2012 retail spreads in the HistData feed consumed it.
+- **It depends on a few big trades in every period,** and it lost heavily in the
+  trending 2008–2009 crisis (futures).
+- **As specified, it is not a tradeable edge at retail costs.** Whether it pays at
+  institutional costs is a separate question that this test can't answer. The rule
+  is not to be re-tuned on this data.

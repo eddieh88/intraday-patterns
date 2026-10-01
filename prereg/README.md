@@ -14,7 +14,7 @@ flattering.
 | `nq_lunch_box.md` | Run. **Fails** on both periods: fading the edges of a narrow 12:00–12:30 NQ box loses −2.27 pts/trade in development (t −3.4) and −0.17 in the holdout. Adding either the trend bias or the ES exit makes no difference. |
 | `fx_distance_fade.md` | Run. **Not confirmed:** fading a fixed 1% distance from the 4-hour SMA(20) on six currency futures was the best of 63 one-rule variants in development (+0.31 ATR/trade, t 2.15). The holdout has the same sign but is within noise (+0.24, t 0.72). |
 | `fx_night_scalper.md` | Run. **Fails** on both periods: an Asian-session Bollinger fade on three FX crosses makes +0.6 bp gross but −1.6 bp net in development (−1.9 in the holdout). It only breaks even at costs under ~0.6 bp. |
-| **`own_fx_basket.md`** | **Registered, not yet run.** Our own evening dollar-basket fade (EURUSD, AUDUSD, NZDUSD), a 36-variant portfolio, tested once on sealed 2010–2014 spot data. |
+| `own_fx_basket.md` | Run. **Fails** on sealed 2010–2014 spot: −30 bp/yr net, 2 of 5 years positive. Gross it is +237 bp/yr, 5 of 5 years, so the fade pattern persisted but retail spreads consumed it. It lives on a few big reversals a year and lost in 2008–2009 (futures). |
 | **`ifvg.md`** | **Written, never run.** Inverse fair value gaps on futures, specified against expert review of the geometry. |
 
 Only some of this project was pre-registered, and the rest is exploratory. That
