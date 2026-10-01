@@ -79,3 +79,32 @@ Restricting to the cheapest pairs, chosen by spread alone, doesn't help. On
 EURUSD + USDJPY the best idea turns negative after 2020. Hourly FX mean reversion
 is real but smaller than the spread. It pays whoever earns the spread, not whoever
 crosses it.
+
+## What the edge is (`edge_anatomy.py`, `weekday_runs.py`, exploratory)
+
+Of the 72 ideas that persisted before costs, 68 are mean reversion. They cluster on
+Mondays (22), in the New York afternoon (20) and in the Asian session (12).
+
+**Not the edge:**
+- **Fading single big hours.** There is no reversion after an hour more than 2.5 sd
+  (−0.3 to +0.04 bp at every delay).
+- **Quote noise.** The run-fade survives a 60-minute entry delay.
+- **Thin markets.** Spreads at signals are normal (0.96× median).
+
+**Edge 1: slow reversal of multi-hour drifts.** After 6 hourly closes in one
+direction, the fade, mean over pairs, makes +0.35 / +0.79 / +1.16 / +0.65 bp over
+1 / 4 / 8 / 24 hours. It peaks at about 8 hours. Random hours make about 0.
+- It is strongest in AUDUSD and NZDUSD: +3 to +4.5 bp at 8–24 hours.
+- USDJPY goes the other way and keeps trending: −1.9 bp at 8 hours, −2.8 at 24.
+- EURUSD makes +1.17 bp at 8 hours against a 0.34 bp spread.
+The generator's exits (ATR targets, 4/12/24-hour holds) were mostly too short for it.
+
+**Edge 2: the "Monday dip-buying" ideas are a weekday risk cycle.** It is
+risk-on on Mondays and risk-off on Thursdays and Fridays. A basket long AUD, NZD,
+GBP and EUR vs USD, short JPY and short CHF makes, per FX day:
+- Monday +2.1 bp (t 2.4)
+- Thursday −1.6 bp (t −1.5)
+- Friday −2.0 bp (t −2.0)
+Long Monday and short Thursday+Friday nets +0.9 bp per trading day after one spread
+per pair (t 1.6, 9 of 12 years positive). It is weak: one of five weekdays,
+noticed after the fact.
