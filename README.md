@@ -180,9 +180,12 @@ artificial penalty — the comparison between them is what counts.
   run on it yet.**
 - **Order flow.** We see 5-minute price bars only — not the order book or
   individual trades.
-- **The level's real job.** If a support/resistance line is meant to tell you
-  *where to put your stop* rather than *which way to trade*, we've been testing
-  the wrong thing. That's untested.
+- **The level's real job, now tested.** If a support/resistance line tells you
+  *where to put your stop* rather than *which way to trade*, a stop at the level
+  should beat one of the same width placed anywhere. It did, by about a hundredth
+  of an R in development, but the one setup that cleared the pre-registered bar
+  (VWAP) was zero in the holdout, and no setup pays after costs with its
+  structural stop. See [prereg/structure_stops.md](prereg/structure_stops.md).
 
 ## Where to go next
 

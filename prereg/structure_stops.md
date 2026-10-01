@@ -190,3 +190,50 @@ no change to any verdict:
 - Q2 with those trades credited the target instead, as an upper bound;
 - the random-walk gross R of S for each setup and cell, as the level a setup
   would show with no edge at all.
+
+## Results
+
+Development was run on 2026-10-01 after Amendment 1 (722,159 trades, 1,053
+sessions). The holdout was unlocked once the same day, because one result passed
+in development (285,314 trades, 370 sessions). `python3 stops/analyze.py [holdout]`.
+Net R at 3 bp, session-clustered; ± is one standard error.
+
+**Q1, placement (S − C)**
+
+| setup | development | dev verdict | holdout | holdout verdict |
+|---|---|---|---|---|
+| ORB | +0.0031 ± 0.0013 (t 2.40), 4/4 years, 6/6 cells | fail (t) | −0.0035 (t −1.66) | — |
+| level | +0.0186 ± 0.0045 (t 4.12), 4/4 years, 5/6 cells | fail (one cell −0.0010) | +0.0136 (t 1.84) | not eligible |
+| **VWAP** | **+0.0079 ± 0.0019 (t 4.23), 3/4 years, 6/6 cells** | **PASS** | **−0.0012 (t −0.36)** | **NOT CONFIRMED** |
+| pullback | +0.0081 ± 0.0024 (t 3.42), 4/4 years, 2/6 cells | fail (cells) | −0.0030 (t −0.87) | — |
+
+**Q2, pays as traded (S).** Every setup loses in development and in the holdout.
+
+| setup | dev S net | holdout S net | median stop width | cost at 3 bp, in R |
+|---|---|---|---|---|
+| ORB | −0.012 (t −1.6) | −0.003 | 171 bp | 0.02 |
+| level | −0.106 (t −11.9) | −0.086 | 35 bp | 0.12 |
+| VWAP | −0.041 (t −8.9) | −0.041 | 60 bp | 0.07 |
+| pullback | −0.269 (t −55.7) | −0.258 | 21 bp | 0.20 |
+
+**Q3, beats momentum at the same width.** No setup passes in development
+(t 0.46 to 1.16).
+
+**Reading.** In development, every setup's structural stop beat a width-matched
+stop placed without regard to structure, by +0.003R to +0.019R. On random walks
+the same comparison is zero. The one result that cleared every development
+condition, VWAP, is zero in the holdout. The level stop is the most consistent
+across both periods (t 4.12, then t 1.84), but it missed one robustness cell in
+development, so by the rules above it was not tested, and its holdout figure is
+exploratory. **Per the outcome table: Q1 fail, Q2 fail.** Where the stop goes
+around a level makes at most about a hundredth of an R. The trades lose after
+costs whatever the stop, because their gross edge (0.01–0.02R) is smaller than the
+cost of a structure-tight stop. The structural stops are tight, so costs take
+0.06–0.20R of each trade, except at ORB, whose stop at the far side of the range is
+wide enough that 80% of its trades end on the time exit.
+
+The reported bounds don't change this:
+- The pullback's tight stops put stop and target in the same bar 10% of the time.
+  Crediting the target in all of those is an upper bound, and it lifts the
+  pullback to +0.014R (dev) and +0.020R (holdout). Still not a pass.
+- A target at the next level does not rescue any setup.
