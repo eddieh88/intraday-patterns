@@ -162,3 +162,31 @@ If nothing passes in development, the holdout stays sealed, as it did for
 stopped, not the drift. But stop placement is a real claim that this project has
 never tested cleanly, and E6b (stop below the level) was the least bad of the
 pre-fix strategies.
+
+## Amendment 1 — 2026-10-01, before any real data was read
+
+**The random-walk check failed as first built, and the cause was the simulation,
+not the design.** With each 5-minute bar built from five 1-minute steps, S − C in
+the primary cell was +0.0037R for pullback (t 2.08) and +0.0024R for VWAP (t 1.67),
+with several neighbouring cells beyond |t| 2. Both S and C also earned +0.05R to
++0.2R gross on a martingale, where the expected value is zero. The cause: on a path
+that moves in coarse steps, price jumps past a stop but the simulator fills at the
+stop, and the error relative to 1R is largest for the tightest stops.
+
+**Fix to the check:** each simulated bar is built from 60 price steps
+(`RW_SUB=60`, now the default; `RW_SUB=5` reproduces the failure). Liquid large caps
+trade many times a minute, so this is closer to the real path. On 881,992
+random-walk trades over 1,071 sessions, S − C is within 1.31 standard errors of
+zero in all 24 cells, and **PASS** in every primary cell (ORB +0.55, level +0.72,
+VWAP +0.70, pullback +0.93). Nothing in the design itself was changed.
+
+**A second artifact the check exposed, which affects levels but not Q1.** With
+tight stops, one 5-minute bar often reaches both the stop and the target, and the
+rule counts the stop. On the random walk this costs the primary pullback cell about
+−0.09R gross, for S and C alike. Because S and C share the width distribution, Q1
+is unaffected; Q2 is biased against tight-stop setups. So, added as reporting, with
+no change to any verdict:
+- the share of trades whose exit bar reached both barriers (outcome code 3);
+- Q2 with those trades credited the target instead, as an upper bound;
+- the random-walk gross R of S for each setup and cell, as the level a setup
+  would show with no edge at all.
