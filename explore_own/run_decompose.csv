@@ -1,0 +1,27 @@
+event,n,h1,h4,h8,t8,h24
+dollar run -> fade the dollar,1620,0.095,-0.061,0.779,1.189,-1.849
+relative run EUR -> fade EUR vs the rest,1517,0.261,0.907,1.343,2.497,2.302
+relative run GBP -> fade GBP vs the rest,1592,0.720,2.494,1.944,3.591,2.144
+relative run AUD -> fade AUD vs the rest,1574,0.134,0.549,1.115,1.930,1.038
+relative run NZD -> fade NZD vs the rest,1500,0.202,0.257,-0.391,-0.664,-1.579
+relative run JPY -> fade JPY vs the rest,1530,0.303,0.339,-0.276,-0.387,-2.627
+relative run CHF -> fade CHF vs the rest,1539,0.215,-0.098,-1.042,-2.028,-1.249
+relative run USD -> fade USD vs the rest,1620,0.081,-0.052,0.668,1.189,-1.585
+"pair run EURUSD -> fade pair, total",1476,0.217,0.748,1.390,1.941,0.799
+   of which the dollar part,1476,0.099,0.273,0.866,1.296,0.088
+   of which EUR vs the other foreign,1476,0.162,0.474,0.553,1.311,0.772
+"pair run GBPUSD -> fade pair, total",1476,0.299,0.334,0.752,0.810,-1.607
+   of which the dollar part,1476,0.283,0.003,0.171,0.239,-2.182
+   of which GBP vs the other foreign,1476,0.034,0.302,0.569,0.970,0.335
+"pair run AUDUSD -> fade pair, total",1489,0.460,1.202,4.101,4.342,4.184
+   of which the dollar part,1489,0.019,0.211,1.729,2.404,0.031
+   of which AUD vs the other foreign,1489,0.472,1.131,2.440,4.710,4.122
+"pair run NZDUSD -> fade pair, total",1528,0.729,2.489,3.622,3.537,4.983
+   of which the dollar part,1528,0.417,0.811,1.912,2.871,2.511
+   of which NZD vs the other foreign,1528,0.340,1.716,1.873,3.218,2.414
+"pair run JPYUSD -> fade pair, total",1431,0.280,-0.010,-1.276,-1.464,-2.104
+   of which the dollar part,1431,0.145,-0.360,-1.507,-1.960,-1.815
+   of which JPY vs the other foreign,1431,0.160,0.381,0.229,0.317,-0.196
+"pair run CHFUSD -> fade pair, total",1546,-0.169,-0.481,-1.076,-1.448,-1.615
+   of which the dollar part,1546,-0.317,-0.220,-0.683,-1.066,-1.336
+   of which CHF vs the other foreign,1546,0.188,-0.270,-0.498,-1.107,-0.329

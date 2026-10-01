@@ -108,3 +108,39 @@ GBP and EUR vs USD, short JPY and short CHF makes, per FX day:
 Long Monday and short Thursday+Friday nets +0.9 bp per trading day after one spread
 per pair (t 1.6, 9 of 12 years positive). It is weak: one of five weekdays,
 noticed after the fact.
+
+## Time-series or cross-sectional? (`xsection.py`, `run_decompose.py`, exploratory)
+
+**A plain linear reversal barely exists, in either form.** Fading the last 4–24
+hours every period, as the dollar factor or as a dollar-neutral long-laggards /
+short-leaders basket, never reaches t 2 in the reversion direction. Over 4 hours
+then 24 hours, the cross-section shows momentum (−1.2 bp, t −2.3). The edge is
+conditional on a persistent run (6 hours in a row), which a linear signal dilutes.
+
+**After a run, it is mostly cross-sectional: one currency overshoots against the
+others.** Fade after 6 hours in a row, 8-hour hold, bp:
+
+| run in … | fade | t |
+|---|---|---|
+| the dollar factor | +0.78 | 1.2 (and −1.85 at 24 hours) |
+| GBP vs the rest | +1.94 | 3.6 |
+| EUR vs the rest | +1.34 | 2.5 |
+| AUD vs the rest | +1.11 | 1.9 |
+| NZD / JPY vs the rest | −0.39 / −0.28 | ~0 |
+| CHF vs the rest | −1.04 | −2.0 (it trends) |
+
+A pair's run splits into a dollar part and a currency part, 8 hours, bp (t):
+
+| pair | total | dollar part | currency vs other foreign |
+|---|---|---|---|
+| AUDUSD | +4.10 | +1.73 (2.4) | +2.44 (4.7) |
+| NZDUSD | +3.62 | +1.91 (2.9) | +1.87 (3.2) |
+| EURUSD | +1.39 | +0.87 (1.3) | +0.55 (1.3) |
+| USDJPY | −1.28 | −1.51 (−2.0) | +0.23 |
+
+The safe havens (JPY, CHF) don't revert; their runs continue.
+
+(Bug fixed on the way: averaging log price levels across currencies with
+`skipna=True` changed which currencies the mean covered whenever one was missing,
+460 hours of 73,512, and it shifted by thousands of bp. Means are now `skipna=False`.
+The January 2015 SNB de-peg day is excluded.)

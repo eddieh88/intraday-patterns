@@ -1,0 +1,28 @@
+strategy,lookback_h,hold_h,bp,t,n,years_up,turnover
+dollar TS reversal,4,4,0.238,1.501,14595,10/12,
+cross-sectional,4,4,0.112,1.212,14597,7/12,1.378
+cross-sectional ranked,4,4,0.185,1.018,14597,8/12,1.378
+dollar TS reversal,4,8,-0.020,-0.063,7297,6/12,
+cross-sectional,4,8,-0.131,-0.757,7299,5/12,1.387
+cross-sectional ranked,4,8,-0.094,-0.261,7299,6/12,1.387
+dollar TS reversal,4,24,-1.151,-1.268,2431,5/12,
+cross-sectional,4,24,-1.192,-2.328,2433,2/12,1.392
+cross-sectional ranked,4,24,-2.738,-2.510,2433,1/12,1.392
+dollar TS reversal,8,4,0.065,0.407,14594,7/12,
+cross-sectional,8,4,0.116,1.250,14597,8/12,1.062
+cross-sectional ranked,8,4,0.233,1.277,14597,7/12,1.062
+dollar TS reversal,8,8,-0.285,-0.906,7297,4/12,
+cross-sectional,8,8,-0.013,-0.076,7299,5/12,1.389
+cross-sectional ranked,8,8,-0.066,-0.185,7299,4/12,1.389
+dollar TS reversal,8,24,-1.206,-1.329,2431,4/12,
+cross-sectional,8,24,-0.338,-0.687,2433,4/12,1.379
+cross-sectional ranked,8,24,-0.606,-0.583,2433,5/12,1.379
+dollar TS reversal,24,4,-0.136,-0.857,14590,3/12,
+cross-sectional,24,4,0.081,0.922,14597,6/12,0.635
+cross-sectional ranked,24,4,0.338,1.855,14597,8/12,0.635
+dollar TS reversal,24,8,-0.185,-0.589,7295,6/12,
+cross-sectional,24,8,0.066,0.391,7299,7/12,0.899
+cross-sectional ranked,24,8,0.379,1.128,7299,9/12,0.899
+dollar TS reversal,24,24,0.435,0.479,2431,8/12,
+cross-sectional,24,24,0.380,0.764,2433,9/12,1.393
+cross-sectional ranked,24,24,0.726,0.699,2433,9/12,1.393
