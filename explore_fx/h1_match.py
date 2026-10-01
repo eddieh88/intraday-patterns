@@ -10,6 +10,7 @@ target, exit at 17:15 New York (after the rollover spread). Pairs that trigger o
 form a group.
   conditions (fixed threshold X, pips or %):
     open_dist : |close - day open (17:00 NY)| >= X
+    prev_dist : |close - previous FX day's close (last mid before 17:00 NY; Friday's on a Monday)| >= X
     h1_move   : |close - previous H1 close| >= X
     h4_move   : |close - close 4 H1 bars ago| >= X
     sma_dist  : |close - SMA20(H1)| >= X        (an Envelopes-style band)
@@ -32,12 +33,12 @@ from weekend_match import walk, his_fingerprints, score, START, END
 
 PAIRS = ["eurusd", "gbpusd", "audusd", "nzdusd", "usdjpy"]
 PIP = {"eurusd": 1e-4, "gbpusd": 1e-4, "audusd": 1e-4, "nzdusd": 1e-4, "usdjpy": 1e-2}
-CONDS = ("open_dist", "h1_move", "h4_move", "sma_dist")
+CONDS = ("open_dist", "prev_dist", "h1_move", "h4_move", "sma_dist")
 XS = [("pips", v) for v in (15, 20, 30, 40, 60)] + [("pct", v) for v in (0.15, 0.2, 0.3, 0.4, 0.6)]
 SS = (25, 30, 40)
 
 
-def run_pair(pair):
+def run_pair(pair, conds=CONDS):
     d = data.load(pair, "dev")
     d = d[(d.index >= START - pd.Timedelta("10D")) & (d.index < END)]
     t = d.index.values.astype("int64")
@@ -45,15 +46,17 @@ def run_pair(pair):
     pip = PIP[pair]
     h = d.mid_close.resample("1h", label="right", closed="right").last().dropna()      # value at the hour's end
     fxday = (h.index + pd.Timedelta("7h")).normalize()
+    by_day = d.mid_close.groupby((d.index + pd.Timedelta("7h")).normalize())
     day_open = d.mid_open.groupby((d.index + pd.Timedelta("7h")).normalize()).first().reindex(fxday).values
-    feats = {"open_dist": h.values - day_open, "h1_move": h.diff().values, "h4_move": h.diff(4).values,
+    prev_close = by_day.last().shift(1).reindex(fxday).values
+    feats = {"open_dist": h.values - day_open, "prev_dist": h.values - prev_close, "h1_move": h.diff().values, "h4_move": h.diff(4).values,
              "sma_dist": (h - h.rolling(20).mean()).values}
     hr = h.index.hour
     in_win = (hr >= 0) & (hr <= 9)
     ok_day = ~(((h.index.month == 12) & (h.index.day >= 17)) | ((h.index.month == 1) & (h.index.day <= 5)))
     ok_day &= (h.index >= START) & (h.index.dayofweek < 5)
     rows = []
-    for cond in CONDS:
+    for cond in conds:
         f = feats[cond]
         for kind, X in XS:
             thr = X * pip if kind == "pips" else X / 100 * h.values
@@ -85,6 +88,12 @@ if __name__ == "__main__":
     cached = "cache/h1_match_trades.parquet"
     if os.path.exists(cached) and "--resim" not in sys.argv:
         trades = pd.read_parquet(cached)
+        missing = [c for c in CONDS if c not in set(trades.cond)]
+        if missing:                                                    # simulate only new conditions
+            with mp.get_context("fork").Pool(5) as pool:
+                extra = pool.starmap(run_pair, [(p, tuple(missing)) for p in PAIRS])
+            trades = pd.concat([trades] + extra, ignore_index=True)
+            trades.to_parquet(cached)
     else:
         with mp.get_context("fork").Pool(5) as pool:
             trades = pd.concat(pool.map(run_pair, PAIRS), ignore_index=True)
