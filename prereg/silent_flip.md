@@ -145,3 +145,13 @@ failed, and the open leans slightly toward continuation. Two things are new:
 the confirmation candle, and a target several R away, which can pay with a low
 win rate. Expect a few thousand trades in development, enough to see an edge of
 about 0.1R per trade.
+
+## Amendment 1 — 2026-10-05, before any code or data
+
+**The scan.** He watches several stocks each morning and trades whichever one forms
+the pattern. The primary test already scans the day's top 100 and takes every
+setup, so its mean net R per trade is the scan's per-trade result. Added as
+reported, no verdict: **one trade per day across the universe**, the setup whose
+entry fills first. Ties at the same 5-minute bar are broken at random (seed 7).
+For it, the report gives the number of trading days with a trade, mean net R
+per day, its t, and the share of days positive.
