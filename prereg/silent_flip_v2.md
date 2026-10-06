@@ -212,3 +212,38 @@ tested range level (0) to the opposite one (1):
 
 Excluding the two odd groups leaves the core pattern at break-even after costs, the
 same as fake levels.
+
+## Feature study — written 2026-10-06, before it runs (development only)
+
+Does anything known by 10:00 pick the silent-flip trades that pay? Primary v2
+trades (1,388 real, with the matching fake-level trades), net at 3 bp. All
+features come from `cache/intraday_daily.parquet`. Full-session highs and lows are
+rebuilt as the max/min of its 09:30–10:00, 10:00–11:00 and 11:00–16:00 blocks,
+because its `pdh`/`pdl`/`hi_rth`/`lo_rth` cover 11:00–16:00 only (see below). ATR20
+is the mean full-session range of the prior 20 sessions.
+
+| feature | definition (known by 10:00) |
+|---|---|
+| vol regime | mean full range of the last 5 sessions / of the last 20 |
+| yesterday's width | (yesterday's full high − low) / ATR20 |
+| gap | \|09:30 open − yesterday's close\| / ATR20 |
+| opening range | today's 09:30–10:00 range / its mean over the prior 20 sessions |
+| market with the trade | the trade's side × the median 09:30–10:00 return of that day's top 100 |
+| market volatility | the median across the top 100 of (full range / close), averaged over the prior 20 sessions |
+
+**Method:** for each feature, five fifths cut at the real trades' quintiles.
+Report real net, fake net (same cuts) and real − fake. That's 30 cells.
+
+**A cell qualifies only if all hold:**
+- real net t ≥ 3.0 (about 0.05 / 30)
+- real − fake > 0 with t ≥ 2.0
+- positive in at least 3 of the 4 development blocks
+
+A qualifying cell is run once on the holdout as a single rule: real net > 0 with
+t ≥ 1.65, and real − fake > 0. If none qualifies, the holdout stays sealed.
+
+**Found while building this:** `data/build_daily.py` takes the prior-day high and
+low from the 11:00–16:00 block alone. On 56% of days the real high or low is set
+before 11:00. E2, E5, E6, E6b and E8–E11 used those columns. The headline results
+(E17/E18, the retest study, the selection study, every study in `flip/` and
+`stops/`) build their levels elsewhere and are unaffected. To be fixed separately.
