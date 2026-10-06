@@ -454,3 +454,21 @@ within the day. This is the one shape the deciles suggest, fixed here before any
 3. **M3's strategy:** the same development criteria (net of 6 bp > 0, t ≥ 2.75,
    ≥ 5/7 blocks positive). If it passes, the holdout runs once (net of 6 bp > 0,
    t ≥ 2.0), with coefficients fit on all of development.
+
+### Amendment 6 — result
+
+`python3 ml/ols.py a6`. Folding by magnitude makes two of the three monotonic:
+- **|tod1|:** ρ −0.82; deciles +1.3 … −0.3 −4.0
+- **|r_prev_oc|:** ρ −0.92; deciles +1.7 … −2.4 −3.8
+- **|tod5|:** ρ −0.72, not monotonic; dropped
+
+Each correlates +0.33 to +0.35 with atr_pct.
+
+**M3 = atr_pct + |tod1| + |r_prev_oc|:**
+- **The folded features add nothing beyond volatility.** By fold, |tod1| has t
+  −1.0 to +0.1 and |r_prev_oc| has t −0.3 to −1.7. atr_pct stays at t −2.3 to −3.0.
+- **The model is unchanged:** IC +0.026 (t 1.94); spread +6.45 bp/day gross; net of
+  6 bp +0.45 (t 0.10), 4/7 blocks positive. **Fail. The holdout stays sealed.**
+
+The hump-shaped drivers are the volatility effect measured differently: stocks with
+extreme recent moves are volatile stocks.
