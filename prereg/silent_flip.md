@@ -155,3 +155,44 @@ reported, no verdict: **one trade per day across the universe**, the setup whose
 entry fills first. Ties at the same 5-minute bar are broken at random (seed 7).
 For it, the report gives the number of trading days with a trade, mean net R
 per day, its t, and the share of days positive.
+
+## Amendment 2 — 2026-10-05, before any real data was read
+
+**The random-walk check, as registered (100 names), passes:** Q2 real − fake
++0.024 ± 0.103 (t 0.23), Q3 real − random +0.020 ± 0.035 (t 0.56), on 541 real
+trades. At that size it cannot see a bias under about 0.4R, so it was also run
+at 1,000 names (three seeds) and 500 names (four seeds):
+
+| run | trades | Q2 real − fake | Q3 real − random |
+|---|---|---|---|
+| 1,000 names, seed 13 | 5,385 | +0.077 (t 2.37) | −0.021 (t −1.73) |
+| 1,000, seed 21 | ~5,300 | −0.067 (t −1.96) | −0.032 (t −2.75) |
+| 1,000, seed 34 | ~5,300 | −0.022 (t −0.70) | −0.039 (t −3.14) |
+| 500, seed 41 | 2,791 | −0.045 (t −1.04) | −0.050 (t −3.22) |
+| 500, seed 52 | 2,768 | +0.068 (t 1.41) | −0.013 (t −0.75) |
+| 500, seed 63 | 2,742 | −0.016 (t −0.33) | −0.066 (t −3.84) |
+| 500, seed 74 | 2,760 | −0.007 (t −0.16) | −0.076 (t −4.59) |
+
+**Q2 has no bias, but its standard error is too small.** The seven estimates
+average about zero, on both sides. Their t values have variance 1.88 rather than
+1 (χ² 13.2 on 7 df, p ≈ 0.07). The first seed's failure was chance. Real and fake
+trades in this test come from the same paths and rest on heavy-tailed outcomes
+with targets near 3.5R; the clustered standard error evidently understates the
+spread. **Change: Q2's critical t in development rises from 2.0 to 2.75**
+(2.0 × √1.88). The holdout's rises from 1.65 to 2.26.
+
+**Q3 is biased against the setup by about −0.04R.** All seven estimates are
+negative. The cause is the registered conservative rule: when the bar that
+fills the stop order also reaches the stop, it counts as a loss, though the stop
+may have traded before the fill. The random control enters at a bar's open and
+never meets that ambiguity. The bias makes Q3 harder to pass, so the rule is
+kept. Q3 is also reported with +0.04R added back, without a verdict.
+
+**Q1 reference.** On the random walk the primary rule averages +0.02R to +0.07R
+gross and −0.03R to +0.02R net at 3 bp. This is the level a setup shows with no
+edge, and it is reported next to Q1.
+
+Nothing else changes. The flip simulator was also fixed to use its own copy of
+the 60-step walk: loading `stops/random_walk_check.py` put `stops/` first on the
+worker path, so workers imported the wrong `sim` and died, and the first run
+hung.

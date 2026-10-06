@@ -2,8 +2,10 @@
 import numpy as np
 import pytest
 
+import sys
 from paths import add_to_path
 add_to_path("stops")
+sys.modules.pop("sim", None)          # stops/ and flip/ both have a sim.py
 import sim
 
 
