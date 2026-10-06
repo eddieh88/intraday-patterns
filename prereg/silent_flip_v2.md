@@ -177,3 +177,38 @@ control is after-only.)
 His live day is reproduced exactly, and the rules that reproduce it lose slightly
 after costs on four years of the top 100 stocks, no better than the same rules on
 levels taken from another day.
+
+## Exploratory follow-ups, development only (no verdicts, holdout untouched)
+
+**Stop management** (`flip/exit_sweep.py`): 11 policies on the same 1,388 entries,
+real and fake levels:
+- fixed −0.036; break-even at +0.5R −0.016 (best, but it helps fake levels alike)
+- break-even at +1R −0.030; trail 0.5R −0.022; trail 1R −0.029
+- trail the last 1 / 3 / 6 bars after +1R: −0.041 / −0.039 / −0.035
+- half off at +1R −0.040; exit at 11:00 −0.035; exit at 12:00 −0.033
+
+All are negative, none beats fake levels with the same exits, and none is positive
+in more than 2 of 4 years. As E8 found, moving the stop changes how results are
+distributed, not their average.
+
+**Confirmed entry** (`flip/confirm_entry.py`): wait for the third candle to close
+beyond candle 2's extreme in the silent candle's color, and enter at 10:15. It
+confirms on 47% of real and 50% of fake trades. As a tradable entry:
+- 635 trades, −0.111R (t −3.41), negative in every year, against −0.037 for fake levels
+
+Split after the fact (not tradable): touch entries whose third candle confirmed
+made +0.180, those that did not −0.227. Fake levels show the same split (+0.268 /
+−0.245). The profit of the confirmed trades happens during the third candle itself,
+before confirmation can be seen.
+
+**Where candle 1 opened** (`flip/gap_split.py`), u = position of the open from the
+tested range level (0) to the opposite one (1):
+
+| where | share | net R | t | fake | real − fake |
+|---|---|---|---|---|---|
+| inside (0.2–0.8): a push into the level, as in his NVDA and UBER | 74% | −0.007 | −0.20 | −0.002 | −0.006 |
+| u ≥ 0.8: gap-and-reverse, as in his PFE and the GM 2021-06-02 sample | 14% | −0.068 | −1.09 | +0.032 | −0.100 |
+| u < 0.2: opened at or past the tested level | 11% | −0.183 | −2.27 | +0.050 | −0.233 |
+
+Excluding the two odd groups leaves the core pattern at break-even after costs, the
+same as fake levels.
