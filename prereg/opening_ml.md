@@ -217,3 +217,17 @@ pairs per fold, with no verdict.
 **Power:** a block has about 120 days. With daily IC standard deviations near
 0.10, a block's IC has a standard error near 0.009. So only regime differences of
 about 0.025 or more in IC are detectable.
+
+## Amendment 3 — 2026-10-06, after a 3-day smoke test of the builder, before the build
+
+The VX futures series is back-adjusted, which keeps its day-to-day changes but
+makes its level drift: it read about 70 in June 2023, when the VIX was near 14.
+**Changes:**
+- The "VX level" feature is replaced by ES's realized volatility over the prior 20
+  sessions (the standard deviation of its daily log returns, annualized). The VX
+  change feature stays.
+- Amendment 2's volatility regime uses that measure in place of the VX level,
+  with the same rule (thirds cut at the prior 250 sessions' terciles).
+
+The smoke test read 300 name-days (2023-06-01 to 06-05) only, to check scales and
+missing values. No target was compared with any feature.
