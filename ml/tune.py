@@ -6,8 +6,10 @@ model is scored on the test block.
 
   python3 ml/tune.py      -> cache/ml_tune.parquet and a printed verdict
 """
-import itertools, time, warnings
-from multiprocessing import Pool
+import itertools, json, os, time, warnings
+os.environ.setdefault("OMP_NUM_THREADS", "1")              # one thread per worker, prediction included
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -23,6 +25,7 @@ GRID = [dict(num_leaves=nl, min_data_in_leaf=md, lambda_l2=l2, learning_rate=lr,
                                                      (0.01, 0.03, 0.1), ("regression", "lambdarank"))]
 MAX_TREES, EVERY = 1000, 10
 T = None
+PARTS = Path("cache/ml_tune_parts")                        # one file per finished fit, so a rerun resumes
 
 
 def daily_ic(df, pred):
@@ -53,18 +56,29 @@ def one(job):
     m = lgb.train(params, ds, MAX_TREES)
     best_k, best_v = EVERY, -np.inf
     for k in range(EVERY, MAX_TREES + 1, EVERY):
-        v, _ = daily_ic(va, m.predict(va[walk.FEATS], num_iteration=k))
+        v, _ = daily_ic(va, m.predict(va[walk.FEATS], num_iteration=k, num_threads=1))
         if v > best_v:
             best_k, best_v = k, v
-    t_ic, _ = daily_ic(te, m.predict(te[walk.FEATS], num_iteration=best_k))
-    return dict(block=b, setting=g, trees=best_k, valid_ic=best_v, test_ic=t_ic)
+    t_ic, _ = daily_ic(te, m.predict(te[walk.FEATS], num_iteration=best_k, num_threads=1))
+    out = dict(block=b, setting=g, trees=best_k, valid_ic=best_v, test_ic=t_ic)
+    (PARTS / f"{b}_{g}.json").write_text(json.dumps(out))
+    return out
 
 
 def main():
     t0 = time.time()
-    jobs = [(b, g) for b in range(len(walk.BLOCKS)) for g in range(len(GRID))]
-    with Pool(12, initializer=init) as p:
-        R = pd.DataFrame(list(p.imap_unordered(one, jobs, chunksize=4)))
+    PARTS.mkdir(parents=True, exist_ok=True)
+    jobs = [(b, g) for b in range(len(walk.BLOCKS)) for g in range(len(GRID))
+            if not (PARTS / f"{b}_{g}.json").exists()]
+    print(f"{len(jobs)} fits to run ({len(walk.BLOCKS) * len(GRID) - len(jobs)} already saved)", flush=True)
+    if jobs:
+        with ProcessPoolExecutor(12, initializer=init) as ex:     # a dead worker raises instead of hanging
+            futs = [ex.submit(one, j) for j in jobs]
+            for i, f in enumerate(as_completed(futs), 1):
+                f.result()
+                if i % 50 == 0 or i == len(jobs):
+                    print(f"  {i}/{len(jobs)} fits  {time.time() - t0:.0f}s", flush=True)
+    R = pd.DataFrame([json.loads(p.read_text()) for p in PARTS.glob("*.json")])
     R.to_parquet("cache/ml_tune.parquet", index=False)
     print(f"{len(R):,} fits ({len(GRID)} settings x {len(walk.BLOCKS)} folds), {time.time() - t0:.0f}s\n")
 

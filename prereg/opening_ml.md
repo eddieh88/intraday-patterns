@@ -320,6 +320,38 @@ setting chosen most often across folds, trained on all of development.
 - the test IC of every setting averaged over folds, to show how much the settings
   matter. That average is for information only and selects nothing.
 
-**Status, 2026-10-06:** the search was stopped at the user's request partway through,
-before any result was read. `ml/tune.py` is committed and can be rerun as registered.
-No verdict exists for Amendment 4.
+**Status:** a first run was stopped at the user's request before any result was read.
+It was rerun as registered, made resumable after a worker-threading slowdown, and
+completed (1,134 fits).
+
+### Amendment 4 — result
+
+`python3 ml/tune.py`. Settings chosen per fold on validation IC:
+
+| block | leaves | min_data | l2 | lr | objective | trees | valid IC | test IC |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 4 | 2000 | 10 | 0.1 | regression | 10 | +0.074 | +0.029 |
+| 1 | 4 | 500 | 1 | 0.03 | lambdarank | 40 | +0.102 | +0.009 |
+| 2 | 15 | 500 | 0 | 0.03 | regression | 30 | +0.024 | +0.048 |
+| 3 | 4 | 500 | 1 | 0.01 | lambdarank | 140 | +0.055 | +0.012 |
+| 4 | 15 | 100 | 0 | 0.1 | regression | 520 | +0.032 | −0.018 |
+| 5 | 63 | 100 | 1 | 0.03 | lambdarank | 10 | +0.019 | −0.007 |
+| 6 | 15 | 100 | 10 | 0.03 | regression | 40 | +0.066 | −0.028 |
+
+**The nested-tuned model has no signal and does not pay (fail on both):**
+- IC +0.009 (t 0.95), positive in 4 of 7 blocks; against B1, +0.011 (t 0.89)
+- spread +0.60 bp/day gross (t 0.19); net of 6 bp, −5.40 (t −1.74), 2 of 7 blocks positive
+
+It is no better than the registered model (IC +0.011). The chosen setting changes
+from fold to fold. Validation ICs of the chosen settings (+0.02 to +0.10) far exceed
+their test ICs, the winner's curse of picking the best of 162.
+
+**Information only:** test IC averaged over folds.
+- The best settings are all 4-leaf regression trees (+0.016 to +0.019).
+- The worst are fast lambdarank models (about −0.01).
+- Across settings, mean validation IC and mean test IC correlate at +0.29.
+- Even the best setting, chosen in hindsight, stays below atr_pct on its own
+  (IC +0.026).
+
+More capacity or tuning does not find more signal; the simplest models do best.
+The holdout stays sealed.
