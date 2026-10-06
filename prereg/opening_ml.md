@@ -285,3 +285,37 @@ spread +6.57 bp/day (t 1.36); **net of 6 bp, +0.57 bp/day (t 0.12). Fail.**
 **Nothing passed, so the holdout stays sealed.** The low-volatility tilt is the one
 consistent cross-sectional effect here, about 6–7 bp a day before costs. That is
 roughly the cost of trading it.
+
+## Amendment 4 — 2026-10-06, after the development results: a nested tuning search (exploratory)
+
+LightGBM stopped at 1–46 trees. An exploratory check, trees 1 to 300 with no
+early stopping, showed training IC rising from 0.10 to 0.40 while validation and
+test IC stayed at about 0.01 at every tree count. So stopping was not cutting off
+signal. This search asks whether other settings, chosen properly, find more.
+
+**Grid (162 settings):**
+- num_leaves 4 / 15 / 63
+- min_data_in_leaf 100 / 500 / 2,000
+- lambda_l2 0 / 1 / 10
+- learning_rate 0.01 / 0.03 / 0.1
+- objective: regression on the ranked target, or **lambdarank**, with each day as a
+  query and labels the day's fifths of y (0–4)
+- the rest as registered: feature and bagging fractions 0.8, seed 7
+
+**Nested selection, so the test block never chooses anything:**
+1. Each setting is trained on each fold's training sessions for up to 1,000 trees.
+2. The number of trees is the checkpoint (every 10) with the best mean daily IC on
+   that fold's **validation** sessions.
+3. The setting is the one with the best validation IC (at its best tree count),
+   chosen **per fold**.
+4. Only then is the chosen model scored on the fold's test block.
+
+**Verdict:** the same criteria as the registered model, for signal and for the
+spread paying at 6 bp. It is a second model after the first failed, so a pass
+would also need to hold on the holdout. If it passes, the holdout runs once on the
+setting chosen most often across folds, trained on all of development.
+
+**Reported, no verdict:**
+- which settings were chosen
+- the test IC of every setting averaged over folds, to show how much the settings
+  matter. That average is for information only and selects nothing.
