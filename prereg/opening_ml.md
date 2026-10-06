@@ -355,3 +355,38 @@ their test ICs, the winner's curse of picking the best of 162.
 
 More capacity or tuning does not find more signal; the simplest models do best.
 The holdout stays sealed.
+
+## Amendment 5 — 2026-10-06: a simple OLS on the top drivers (post-hoc; the holdout decides)
+
+The features below were picked after seeing the walk-forward results, including
+SHAP on the test blocks. So the development result is exploratory, and only the
+holdout can confirm it.
+
+**Features (day ranks, as registered):** atr_pct, tod1, tod5, r_prev_oc. These are
+the stock-level features with the highest SHAP: atr_pct was in the top 5 in 7/7
+folds; tod1, tod5 and r_prev_oc in the first block's top 5, and are mildly positive in
+most blocks.
+
+**Step 1, monotonicity, before any OLS fit:**
+- For each feature, the mean y (bp) by decile of its day rank, on the training
+  sessions of each fold. A feature is **monotonic** if, pooled over development, the
+  decile means have Spearman |ρ| ≥ 0.8 against the decile number. Report the sign
+  changes between adjacent deciles.
+- Non-monotonic features are dropped from the OLS. They are not transformed:
+  choosing a shape after looking would be another post-hoc step.
+
+**Step 2, OLS walk-forward:**
+- Same folds as registered. OLS of the ranked target on the monotonic features,
+  fit on each fold's training sessions (no validation set is needed).
+- **Primary, M1:** the monotonic features only.
+- **Secondary, M2:** M1 plus atr_pct × m_ES_open (volatility times the ES opening
+  move: the beta effect suggested by SHAP).
+- **Reported:** each coefficient per fold with a session-clustered t, to show
+  stability; IC, spread and net results as for the registered model.
+
+**Decision:**
+- **Development:** the same criteria as the registered model's strategy (net of
+  6 bp > 0 with t ≥ 2.75, at least 5 of 7 blocks positive).
+- **Holdout:** if M1 or M2 passes, it runs once, with coefficients fit on all of
+  development. Confirmed if net of 6 bp > 0 with t ≥ 2.0.
+- If neither passes, the holdout stays sealed.
