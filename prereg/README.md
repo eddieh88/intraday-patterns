@@ -16,7 +16,7 @@ flattering.
 | `fx_night_scalper.md` | Run. **Fails** on both periods: an Asian-session Bollinger fade on three FX crosses makes +0.6 bp gross but −1.6 bp net in development (−1.9 in the holdout). It only breaks even at costs under ~0.6 bp. |
 | `own_fx_basket.md` | Run. **Fails** on sealed 2010–2014 spot: −30 bp/yr net, 2 of 5 years positive. Gross it is +237 bp/yr, 5 of 5 years, so the fade pattern persisted but retail spreads consumed it. It lives on a few big reversals a year and lost in 2008–2009 (futures). |
 | **`ifvg.md`** | **Written, never run.** Inverse fair value gaps on futures, specified against expert review of the geometry. |
-| **`silent_flip_v2.md`** | **Written, not yet run.** Version 2, from his 3 Sept 2026 live trade: within-session flip swings, tolerances in units of the opening candle, and a near-flat silent candle allowed. |
+| `silent_flip_v2.md` | Run. **Fails** in development. Rules rebuilt from his 3 Sept 2026 live trade (reproduced to the cent) give 1,388 trades, −0.036R net (t −1.2), zero before costs; fake levels do as well, and his trailing stop doesn't help. Holdout sealed. |
 | `silent_flip.md` | Run. **Fails** in development: 877 trades, −0.037R net (t −1.0), zero before costs. Fake levels set up as often and do as well (real − fake −0.002R), and the entry is no better than a random one. The holdout stays sealed. |
 | `structure_stops.md` | Run. **Fails.** Stops at each setup's own structure beat a width-matched random-placement stop in development by 0.003–0.019R. The one that cleared every condition (VWAP) is zero in the holdout (t −0.36). No setup pays after costs with its structural stop. |
 

@@ -143,3 +143,37 @@ edge at all.** The two seeds average about +0.01R net, so seed 13 was chance. Bu
 standard errors here run about 1.37× too small, as version 1's seven null runs
 showed for Q2. **Change: Q1's critical t is 2.75 in development (holdout 2.26),
 the same as Q2's.** Q3 stays at 2.0, since its remaining lean is against the setup.
+
+## Results — development, 2026-10-05
+
+`python3 flip/run.py dev 2 && python3 flip/analyze.py dev 2`. Primary
+specification: **1,388 real trades** on 711 sessions across 221 names, and 1,456
+fake-level trades. Net R at 3 bp, session-clustered.
+
+| question | estimate | t | years positive | grid positive | verdict |
+|---|---|---|---|---|---|
+| Q1 pays | −0.036 ± 0.030 | −1.20 | 1/4 | 0/81 | **fail** |
+| Q2 levels matter (real − fake) | −0.026 ± 0.035 | −0.75 | 2/4 | 14/81 | **fail** |
+| Q3 timing (real − random entry) | −0.029 ± 0.014 | −2.08 | 1/4 | 5/81 | **fail** |
+
+**Nothing passes; the holdout stays sealed.** (The analysis prints a "+0.04 bias-
+corrected" Q3 line carried over from version 1. It does not apply here: version 2's
+control is after-only.)
+
+- **Before costs it is zero:** −0.001R gross; −0.013 at 1 bp, −0.071 at 6 bp.
+- **Exits:** 21% reach the target (median 1.7R away), 38% are stopped, 41% are
+  open at the close.
+- **Trailing stops do not help:** version 1's trail −0.038, the trail like his
+  −0.040.
+- **By level:** RH −0.021, RL −0.044, FH −0.056, FL −0.022, all within noise of zero.
+  Fake levels set up as often (1,456 vs 1,388) and do no worse.
+- **Frequency:** 1.32% of stock-days fill, 3.3 trades a year per stock in the top
+  100, about 1.3 a day across a 100-stock scan, and about one every three weeks on a
+  5-stock watchlist. That is 60% more than version 1, and still below "weekly per
+  stock".
+- **One trade a day, the first to fill (his scan):** 711 days, −0.050R a day
+  (t −1.27), 44% of days positive.
+
+His live day is reproduced exactly, and the rules that reproduce it lose slightly
+after costs on four years of the top 100 stocks, no better than the same rules on
+levels taken from another day.
