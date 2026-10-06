@@ -133,3 +133,52 @@ intraday effects are documented, so a small positive IC (about 0.01–0.03) is
 plausible. But the spread has to clear 6 bp a day, and this repo's intraday edges
 have so far been 1–2 bp. Expect the drivers to be the opening-relative return,
 same-time-of-day persistence and the gap.
+
+## Amendment 1 — 2026-10-06, before any feature or target is built: macro and sector
+
+**Data:**
+- `cache/mp_futures_1min`: back-adjusted continuous contracts on 1-minute bars,
+  New York time, 2021–2026
+- `cache/mp_etf_5min`: ETFs on 5-minute bars
+
+"Macro move" means the change from the prior session's last regular bar (the
+1-minute bar stamped 15:59, or 12:59 on a half day) to the close of the 1-minute
+bar stamped 09:58. That close is at 09:59, before the 10:00 entry. Returns are
+log returns. For VX the change is in points.
+
+**Raw macro context (one value per day; not ranked):**
+
+| series | what it stands for |
+|---|---|
+| ES move; ES 09:30–09:58 move | the market overnight and at the open |
+| NQ minus ES move; RTY minus ES move | tech against broad; small against large |
+| ZN move | 10-year rates (price up = yields down) |
+| US move minus ZF move | the curve: 30-year against 5-year |
+| DX move | the dollar |
+| J1 move | the yen, as a risk-off gauge |
+| CL move; GC move | oil; gold |
+| VX change; VX level at 09:58 | the change in expected volatility; its level |
+| BTC move | risk appetite |
+
+**Stock-level macro exposure (ranked each day):**
+- For each of ES, ZN, DX, CL and VX, β is the stock's beta to that series. It is
+  estimated from the prior 60 sessions of close-to-close daily returns (VX in
+  point changes), with at least 40 of them.
+- The feature is β × today's macro move: the move each stock "should" make from
+  that macro shock. That gives five features.
+
+**Sector (ranked each day):**
+- Each stock is assigned the one of XLK, XLF, XLE, XLV, XLY, XLP, XLI, XLU, XLB,
+  XLRE, XLC and SMH whose daily returns correlated most with its own over the prior
+  60 sessions. This is the rule from the selection study.
+- **Features:**
+  - the stock's 09:30–10:00 return minus its sector ETF's (its own move, with the
+    sector removed)
+  - the sector ETF's 09:30–10:00 return minus SPY's (sector strength at the open)
+
+**The leak audit covers these too:** with every futures bar stamped 09:59 or later,
+and every ETF bar stamped 10:00 or later, replaced, all features must be identical.
+
+The feature count rises from 29 to 45. Nothing else changes. Prior: macro surprises
+matter for each stock's own direction more than for ranking stocks against each
+other. Expect the sector-relative opening return to matter most of the additions.
