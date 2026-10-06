@@ -177,6 +177,31 @@ The FX data is HistData spot tick quotes (bid/ask), reduced to one-minute bars. 
 timestamps are New York local time with daylight saving, not EST as documented. Within
 this repo, 2010–2014 was sealed until the one test above.
 
+### 10. A YouTube strategy, rebuilt from its creator's own live trade
+
+The "silent flip": on 15-minute candles, a strong opening candle runs into yesterday's
+high or low (or the next swing beyond), the next candle turns against it, and you fade
+the move toward the other side of yesterday's range. The video shows one live trade.
+
+We found that trade's date in the data. His chart's timestamp and Yahoo's prices match
+to the cent: **3 September 2026**. Rules rebuilt from that morning reproduce his calls
+exactly: they short UBER at 77.78 with the stop at 78.48 (his 78.50) and the target at
+75.36, and they skip the four stocks he skipped.
+
+| | result |
+|---|---|
+| The rules as first written (877 trades, 2021–25) | −0.037R after costs, zero before. Levels taken from a random other day do as well |
+| Rebuilt from his trade (1,388 trades) | −0.036R after costs, zero before. Fake levels again do as well |
+| 11 ways of moving the stop, including trailing it as he did | All negative (−0.016R to −0.041R). None beats the same exits on fake levels |
+| Waiting for the third candle to confirm | Worse (−0.11R): the move happens before the confirmation can be seen |
+| Only the cleanest form, a push from inside yesterday's range into the level | Breaks even after costs (−0.007R), no better than fake levels |
+
+Before any real data was read, a random-walk check of each version caught two problems
+in our own controls, recorded as amendments: error bars that were too narrow, and a
+random-entry control that could see the future. The holdout stays sealed, because nothing
+passed. Details: [prereg/silent_flip.md](prereg/silent_flip.md),
+[prereg/silent_flip_v2.md](prereg/silent_flip_v2.md), [flip/figures/](flip/figures/).
+
 ## One pattern claim did check out
 
 **Fair value gaps fill at roughly the rates people say they do.**
@@ -224,6 +249,7 @@ artificial penalty — the comparison between them is what counts.
 | [explore_nq/](explore_nq/NOTES.md) | NQ futures: the posted dip-buying system, taken apart, and the Lunch Box |
 | [explore_fx/](explore_fx/NOTES.md) | FX: reverse-engineering a posted one-rule strategy, the forensics, the searches |
 | [explore_own/](explore_own/NOTES.md) | Our own FX strategy work: spreads, the generator, what the edge is |
+| [flip/](flip/) | The silent flip: simulator, random-walk checks, exit sweep, sample sheets and figures |
 | [lib/](lib/), [data/](data/), [render/](render/), [diagnostics/](diagnostics/) | Shared code, data download, chart rendering, one-off checks — each with its own README |
 
 ## Words used here
