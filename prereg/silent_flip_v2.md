@@ -247,3 +247,18 @@ low from the 11:00–16:00 block alone. On 56% of days the real high or low is s
 before 11:00. E2, E5, E6, E6b and E8–E11 used those columns. The headline results
 (E17/E18, the retest study, the selection study, every study in `flip/` and
 `stops/`) build their levels elsewhere and are unaffected. To be fixed separately.
+
+### Feature study — result
+
+`python3 flip/features.py`. **No cell qualifies; the holdout stays sealed.** The
+best fifth of any feature reaches real net t 1.04 (low market volatility, +0.066R,
+1 of 4 years positive), against the 3.0 required.
+- Most fifths are within ±0.06R of zero, and their real − fake gaps go both ways.
+- The extremes of the opening range (its smallest and largest fifths) and the
+  strongest market moves either way do worst, around −0.10 to −0.12R. None of
+  these extremes is consistent across years.
+- Volatility regime, yesterday's width and the gap show no order across their
+  fifths.
+
+What is visible by 10:00 does not sort these trades, as the 09:45 selection study
+found for the momentum entry.
