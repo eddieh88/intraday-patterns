@@ -182,3 +182,38 @@ and every ETF bar stamped 10:00 or later, replaced, all features must be identic
 The feature count rises from 29 to 45. Nothing else changes. Prior: macro surprises
 matter for each stock's own direction more than for ranking stocks against each
 other. Expect the sector-relative opening return to matter most of the additions.
+
+## Amendment 2 — 2026-10-06, before any feature or target is built: do the drivers change?
+
+The walk-forward reports drivers by fold. Differences between folds are partly
+noise (about 120 days a block), so the change itself is tested.
+
+**1. Over time.** For each feature, compute its own daily IC (the Spearman
+correlation with y) in each of the 7 blocks, with a standard error over days. Run
+Cochran's Q across blocks.
+- A feature's effect **changes over time** if Q's p-value < 0.05 / (number of
+  features).
+- Report I² (the share of variation beyond noise) for every feature.
+
+**2. By regime, defined before the fact.** Each day gets three labels, all known
+by 10:00 from prior data only:
+- **volatility:** the VX level at 09:58, in thirds, cut at the prior 250 sessions'
+  terciles (expanding until there are 250)
+- **trend:** ES's 20-session return up or down at the prior close
+- **rates:** ZN's 20-session move up or down at the prior close
+
+For each feature and each label, compare its daily IC between regimes (Q across
+the groups), with the same Bonferroni threshold.
+
+**3. Does knowing the regime help, out of sample?** Run only for features passing
+1 or 2. A regime-switching version of the distilled rule uses, in each regime, the
+signs and feature set chosen from that regime's training days only. It must beat
+the static distilled rule: the paired daily spread difference, net at 6 bp, with
+t ≥ 2.0 over the walk-forward test days.
+
+**4. LightGBM's own interactions.** Report the mean |SHAP interaction| for the top
+pairs per fold, with no verdict.
+
+**Power:** a block has about 120 days. With daily IC standard deviations near
+0.10, a block's IC has a standard error near 0.009. So only regime differences of
+about 0.025 or more in IC are detectable.
