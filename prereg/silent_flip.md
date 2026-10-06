@@ -196,3 +196,42 @@ Nothing else changes. The flip simulator was also fixed to use its own copy of
 the 60-step walk: loading `stops/random_walk_check.py` put `stops/` first on the
 worker path, so workers imported the wrong `sim` and died, and the first run
 hung.
+
+## Results — development, 2026-10-05
+
+`python3 flip/run.py && python3 flip/analyze.py`. Primary specification: **877
+real trades** on 557 sessions across 196 names, and 915 fake-level trades. Net R
+at 3 bp, session-clustered.
+
+| question | estimate | t | years positive | grid positive | verdict |
+|---|---|---|---|---|---|
+| Q1 pays | −0.037 ± 0.037 | −1.00 | 1/4 | 0/81 | **fail** |
+| Q2 levels matter (real − fake) | −0.002 ± 0.049 | −0.03 | 2/4 | 25/81 | **fail** |
+| Q3 timing (real − random entry) | −0.051 ± 0.018 | −2.78 | 0/4 | 3/81 | **fail** (bias-corrected −0.011, t −0.59) |
+
+**Nothing passes, so the holdout stays sealed for this rule.**
+
+- **Before costs it is zero:** +0.003R gross. Net is −0.011R at 1 bp, −0.037R at
+  3 bp, and −0.077R at 6 bp.
+- **Exits:** 21% of trades reach the target (median 1.9R away), 41% are stopped,
+  and 38% are still open at the close.
+- **By level:** RL +0.039, RH −0.040, FH −0.079, FL −0.077. None differs from zero,
+  and the flip levels, the part the method adds, do worst.
+- **Variants:** his trailing stop −0.034. Entry window to 11:00 −0.037.
+- **One trade a day across the universe (his scan):** 557 days, −0.046R a day
+  (t −1.01), 44.9% of days positive.
+- **Fake levels:** they set up as often (915 vs 877 trades) and earn the same. On
+  these stocks, yesterday's high and low and the next swing beyond do not mark
+  where reversals happen.
+- **Frequency:** 0.09 setups per name per month, about one a year per stock in
+  the top 100. He says about weekly; his reading of "strong" and "tests" is
+  presumably looser than these rules.
+
+**A weakness found in reading the grid, not in the verdict.** The candle-1
+strength threshold (0.75, 1.0, 1.5 × ATR15) barely changes the trades, because
+ATR15 comes from yesterday's last 14 bars. Those are afternoon bars, and the
+09:30 bar is usually several times their size, so almost every opening candle
+counts as "strong". The body-share rule is the filter that binds. A stricter
+definition, such as against the average 09:30 bar of the last 20 sessions,
+would select fewer and bigger candles. It was not tested, and it would be a new
+specification, not a rescue of this one.
