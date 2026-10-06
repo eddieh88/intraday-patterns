@@ -38,7 +38,7 @@ P = T[spec_mask(T, PRIMARY)]
 real = P[P.kind == "real"]
 print(f"{PERIOD}: primary spec, {len(real):,} real trades on {real.date.nunique()} sessions "
       f"({real.symbol.nunique()} names); {(P.kind == 'fake').sum():,} fake-level trades")
-print(f"net R at {BP} bp, session-clustered; critical t {T_CRIT} (Q2: {T_CRIT_Q2})\n")
+print(f"net R at {BP} bp, session-clustered; critical t {T_CRIT} (Q2{' and Q1' if VERSION == 2 else ''}: {T_CRIT_Q2})\n")
 
 prim = q_stats(P)
 blocks = {b: q_stats(g) for b, g in P.groupby("block")} if DEV else {}
@@ -46,7 +46,8 @@ grid = [q_stats(T[spec_mask(T, sp)]) for sp in GRID] if DEV else []
 names = ("Q1 pays          real", "Q2 levels matter real - fake", "Q3 timing        real - random")
 for q, name in enumerate(names):
     m, se, t = prim[q]
-    ok = m > 0 and t >= (T_CRIT_Q2 if q == 1 else T_CRIT)
+    crit = T_CRIT_Q2 if (q == 1 or (q == 0 and VERSION == 2)) else T_CRIT   # v2 Amendment 2: Q1 too
+    ok = m > 0 and t >= crit
     line = f"  {name:32s} {m:+.4f} ± {se:.4f}  t {t:+5.2f}"
     if DEV:
         pos_b = sum(v[q][0] > 0 for v in blocks.values())

@@ -118,3 +118,28 @@ reported too. The verdicts stay on the fixed stop.
 
 **Added for review:** every version-2 trade is written to a file, and a random,
 outcome-blind sheet of them is rendered for checking by eye.
+
+## Amendment 2 — 2026-10-05, before any archive data under version 2
+
+**The random-entry control had a look-ahead (in version 1 too).** Its 20 entries
+were drawn from all of 10:00–10:25, but only on days when the real stop order
+filled. An entry drawn before the fill bar "knows" that price later reached the
+trigger, which favours the control. On random walks the control averaged about
++0.08R gross, against −0.007 ± 0.012R for brackets of random direction with the
+same exits. That, more than the conservative fill rule, is why version 1's Q3
+leaned against the setup. Version 1's Q3 fail stands, since the bias only made it
+harder to pass. **Fix for version 2:** the random entries are drawn only from the
+real trade's fill bar onward, the "after-only" rule from E16.
+
+**Random-walk check, version 2 (1,000 names):**
+
+| seed | real net R | Q2 real − fake | Q3 real − random |
+|---|---|---|---|
+| 13 (control before the fix) | +0.060 (t 2.04) | +0.060 (t 1.57) | −0.025 (t −1.80) |
+| 21 (fixed control) | −0.033 (t −1.22) | −0.043 (t −1.15) | −0.019 (t −1.42) |
+
+Q2 and Q3 pass on both seeds. **Q1 on seed 13 would have passed at t ≥ 2.0 with no
+edge at all.** The two seeds average about +0.01R net, so seed 13 was chance. But the
+standard errors here run about 1.37× too small, as version 1's seven null runs
+showed for Q2. **Change: Q1's critical t is 2.75 in development (holdout 2.26),
+the same as Q2's.** Q3 stays at 2.0, since its remaining lean is against the setup.

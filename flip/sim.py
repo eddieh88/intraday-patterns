@@ -195,9 +195,15 @@ def execute(o, h, l, c, hh, p, win_end=WIN_END, starts=None, trail=False):
                 cost=1e-4 * fill / (side * (fill - stop)), tgt_R=side * (tgt - fill) / (side * (fill - stop)))
 
 
-def random_entries(o, h, l, c, hh, side, risk, reward, rng, win_end=WIN_END):
-    """N_DRAWS entries at the open of random bars in the window, same distances."""
+def random_entries(o, h, l, c, hh, side, risk, reward, rng, win_end=WIN_END, after=None):
+    """N_DRAWS entries at the open of random bars in the window, same distances.
+
+    after (v2): draw only from the real trade's fill bar onward. Drawing earlier bars
+    of a day on which the real order filled lets the control know that price later
+    reached the trigger, a look-ahead in its favour (v2 Amendment 2)."""
     js = np.flatnonzero((hh >= 10) & (hh <= win_end + 1e-9))
+    if after is not None:
+        js = js[js >= after]
     R, cost = [], []
     for j in rng.choice(js, size=N_DRAWS, replace=True):
         f = o[j]
@@ -246,7 +252,8 @@ def name_day(o, h, l, c, hh, hist, rng, version=1):
                        trig=p["trig"], stop=p["stop"], tgt=p["tgt"], **ex)
             if kind == "real":
                 row["R_rand"], row["c_rand"] = random_entries(o, h, l, c, hh, p["side"], ex["risk"],
-                                                              ex["tgt_R"] * ex["risk"], rng)
+                                                              ex["tgt_R"] * ex["risk"], rng,
+                                                              after=ex["j"] if version == 2 else None)
                 if sp == primary:
                     late = execute(o, h, l, c, hh, p, WIN_END_LATE)
                     tr = execute(o, h, l, c, hh, p, starts=starts, trail=True)

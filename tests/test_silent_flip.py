@@ -141,3 +141,12 @@ def test_his_trailing_stop_follows_the_last_three_bars_after_one_r():
     # +1R first at bar 10 (stop -> 100.05); bar 11 tightens it to 99.90 (highs of bars 9-11);
     # bar 12 reaches 99.90
     assert R == pytest.approx((100.5 - 99.9) / 0.5)
+
+
+def test_v2_random_entries_never_come_before_the_real_fill():
+    n = 78
+    o = np.arange(n, dtype=float) + 100; h = o + 0.5; l = o - 0.5; c = o + 0.2
+    rng = np.random.default_rng(0)
+    # risk huge and reward huge: every entry exits at the close, so R = (c[-1] - entry) / risk
+    R, _ = sim.random_entries(o, h, l, c, HH, 1, 1e3, 1e3, rng, after=9)    # fill at the 10:15 bar
+    assert R == pytest.approx((c[-1] - np.mean([o[9], o[10], o[11]])) / 1e3, abs=0.003)
