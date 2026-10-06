@@ -32,8 +32,11 @@ def candles(ax, O, H, L, C, x0=0, w=.62):
         ax.add_patch(Rectangle((x0 + i - w / 2, min(o, c)), w, max(abs(c - o), 1e-9), color=col, zorder=4))
 
 
-def level_line(ax, y, name, color, x1, ls="-"):
-    ax.axhline(y, color=color, lw=1.4, ls=ls, zorder=2)
+def level_line(ax, y, name, color, x1, ls="-", full=True):
+    if full:
+        ax.axhline(y, color=color, lw=1.4, ls=ls, zorder=2)
+    else:                                                   # stop at the label, leaving room for notes
+        ax.hlines(y, -1, x1, color=color, lw=1.4, ls=ls, zorder=2)
     ax.text(x1, y, f" {name} {y:.2f}", color=color, fontsize=8.5, va="center", ha="left", fontweight="bold")
 
 
@@ -45,7 +48,7 @@ def tidy(ax):
 
 # ---------- 1. the setup as taught ----------
 def schematic():
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6.6))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6.6))
     yday = [(100.2, 100.9, 99.8, 100.6), (100.6, 101.5, 100.4, 101.3), (101.3, 102.0, 101.0, 101.4),
             (101.4, 101.6, 100.7, 100.9), (100.9, 101.2, 100.2, 100.4), (100.4, 100.8, 99.6, 99.9),
             (99.9, 100.4, 99.5, 100.2), (100.2, 100.7, 100.0, 100.5)]
@@ -61,36 +64,39 @@ def schematic():
         x0 = len(yd) + 1
         candles(ax, O2, H2, L2, C2, x0)
         ax.axvline(x0 - 1, color=MUTE, lw=1, ls=":")
-        ax.text(x0 - 1.2, 103.3 if short else 96.7, "09:30", ha="right", fontsize=8, color=MUTE)
+        ax.text(x0 - 1.2, .97 if short else .03, "09:30", transform=ax.get_xaxis_transform(), ha="right",
+                va="top" if short else "bottom", fontsize=8, color=MUTE)
         RH, RL = H.max(), L.min()
         FH, FL = (102.8, 99.0) if short else (101.0, 97.2)
         xr = x0 + len(td) + .3
-        level_line(ax, RH, "range high", LEVEL, xr); level_line(ax, RL, "range low", LEVEL, xr)
-        level_line(ax, FH, "flip high", FLIP, xr, "--"); level_line(ax, FL, "flip low", FLIP, xr, "--")
-        for k, lab in ((0, "1  strong\nopening candle"), (1, "2  silent\ncandle")):
+        level_line(ax, RH, "range high", LEVEL, xr, full=False); level_line(ax, RL, "range low", LEVEL, xr, full=False)
+        level_line(ax, FH, "flip high", FLIP, xr, "--", False); level_line(ax, FL, "flip low", FLIP, xr, "--", False)
+        for k in (0, 1):
             ax.axvspan(x0 + k - .45, x0 + k + .45, color=SETUP, alpha=.16, zorder=0)
-            y = (H2[k] + .35) if short else (L2[k] - .35)
-            ax.text(x0 + k, y, lab, ha="center", va="bottom" if short else "top", fontsize=8.5, color=SETUP, fontweight="bold")
         trig = L2[1] if short else H2[1]
         stop = (max(H2[0], H2[1]) + .1) if short else (min(L2[0], L2[1]) - .1)
         tgt = RL if short else RH
-        ax.hlines(trig, x0 + 1.5, x0 + len(td) - .3, color=INK, lw=1.5)
-        ax.hlines(stop, x0 + 1.5, x0 + len(td) - .3, color=LOSS, lw=1.3, ls="--")
-        ax.annotate("", xy=(x0 + 2.2, tgt), xytext=(x0 + 2.2, trig), arrowprops=dict(arrowstyle="->", color=WIN, lw=1.6))
-        ax.text(x0 + 1.55, trig, ("sell-stop at candle 2's low" if short else "buy-stop at candle 2's high"),
-                ha="right", va="center", fontsize=8.5, color=INK)
-        ax.text(x0 + 1.55, stop, "stop beyond both highs" if short else "stop beyond both lows",
-                ha="right", va="center", fontsize=8.5, color=LOSS)
-        ax.text(x0 + 2.4, (trig + tgt) / 2, "target: the other\nside of yesterday", fontsize=8.5, color=WIN, va="center")
-        ax.set_xticks([3.5, x0 + 2.5]); ax.set_xticklabels(["yesterday (15-min)", "today, first 90 minutes"], fontsize=9)
-        ax.set_xlim(-1, x0 + len(td) + 3.2)
+        xe = x0 + len(td) - .3
+        ax.hlines(trig, x0 + 1.5, xe, color=INK, lw=1.5)
+        ax.hlines(stop, x0 - .5, xe, color=LOSS, lw=1.3, ls="--")
+        ax.annotate("", xy=(xe - .4, tgt), xytext=(xe - .4, trig), arrowprops=dict(arrowstyle="->", color=WIN, lw=1.6))
+        xn = xe + 6.2                                       # notes column, right of the level labels
+        ax.text(xn, trig, "entry: stop order at\ncandle 2's " + ("low" if short else "high"), va="center", fontsize=8.5, color=INK)
+        ax.text(xn, stop, "stop: beyond both\ncandles' " + ("highs" if short else "lows"), va="center", fontsize=8.5, color=LOSS)
+        ax.text(xn, (trig + tgt) / 2, "target: the other\nside of yesterday", va="center", fontsize=8.5, color=WIN)
+        ax.set_xticks([3.5, x0, x0 + 1, x0 + 3.5])
+        ax.set_xticklabels(["yesterday (15-min)", "1", "2", "today, first 90 minutes"], fontsize=9)
+        for t in ax.get_xticklabels()[1:3]:
+            t.set_color(SETUP); t.set_fontweight("bold")
+        ax.set_xlim(-1, x0 + len(td) + 10.5)
         ax.set_title(("SHORT: a strong green candle runs into the flip high" if short
                       else "LONG: a strong red candle runs into the range low"), fontsize=12, fontweight="bold",
                      color=INK, loc="left")
         tidy(ax)
     fig.suptitle("The silent flip, as taught", fontsize=16, fontweight="bold", x=.02, ha="left", y=.99)
-    fig.text(.02, .925, "Drawn, not real data. Levels: yesterday's high and low, and the most recent earlier swing beyond each. "
-             "Enter only if price breaks candle 2 in the first hour.", fontsize=10.5, color=MUTE)
+    fig.text(.02, .925, "Drawn, not real data. Shaded: candle 1, the strong opening candle, and candle 2, the 'silent' candle "
+             "against it. Levels: yesterday's high and low, and the most recent earlier swing beyond each.",
+             fontsize=10.5, color=MUTE)
     fig.tight_layout(rect=(0, 0, 1, .91))
     fig.savefig(f"{OUT}/schematic.png", dpi=110); plt.close(fig)
 
@@ -105,12 +111,14 @@ def exit_bar(o, h, l, c, j, side, stop, tgt):
     return len(c) - 1
 
 
-def sample_real():
-    T = pd.read_parquet("cache/flip_dev.parquet")
-    R = T[spec_mask(T, sim.PRIMARY) & (T.kind == "real")]
-    pick = pd.concat([R[R.side < 0].sample(3, random_state=4), R[R.side > 0].sample(3, random_state=4)])
+def sample_real(version=1, n=3, seed=4):
+    """Random, outcome-blind sheet: n shorts and n longs from the primary spec."""
+    spec, within = (sim.PRIMARY, False) if version == 1 else (sim.PRIMARY_V2, True)
+    T = pd.read_parquet("cache/flip_dev.parquet" if version == 1 else "cache/flip_v2_dev.parquet")
+    R = T[spec_mask(T, spec) & (T.kind == "real")]
+    pick = pd.concat([R[R.side < 0].sample(n, random_state=seed), R[R.side > 0].sample(n, random_state=seed)])
     files = sorted(glob.glob("cache/mp5min/*.parquet"))
-    fig, axes = plt.subplots(3, 2, figsize=(19, 17))
+    fig, axes = plt.subplots(n, 2, figsize=(19, 5.7 * n))
     for ax, tr in zip(axes.T.ravel(), pick.itertuples()):
         k = files.index(next(f for f in files if DAY(f) == tr.date))
         hist = []
@@ -120,8 +128,8 @@ def sample_real():
                 hist.append(sim.name_day(*s, [], None)[1])
         o, h, l, c, hh = sessions(files[k], {tr.symbol})[tr.symbol]
         O, H, L, C, starts = sim.bars15(o, h, l, c, hh)
-        RH, RL, FH, FL = sim.levels_from(hist)
-        p = sim.pattern(O, H, L, C, tr.atr, RH, RL, FH, FL, sim.PRIMARY)
+        RH, RL, FH, FL = sim.levels_from(hist, within)
+        p = sim.pattern(O, H, L, C, tr.atr, RH, RL, FH, FL, spec)
         ex = sim.execute(o, h, l, c, hh, p)
         # yesterday's and today's 15-minute candles
         prev = [f for f in files[max(0, k - 5):k] if tr.symbol in sessions(f, {tr.symbol})][-1]
@@ -162,25 +170,29 @@ def sample_real():
         ax.set_xticks([len(PO) / 2, x0 + len(O) / 2]); ax.set_xticklabels(["yesterday", "trade day"], fontsize=9)
         ax.set_xlim(-1, x0 + len(O) + 5)
         tidy(ax)
-    fig.suptitle("The silent flip in the data: a random sample, not picked by outcome", fontsize=16,
-                 fontweight="bold", x=.02, ha="left", y=.995)
-    fig.text(.02, .968, "Development trades, primary rules, 15-minute candles. Shaded: candles 1 and 2. Solid blue: yesterday's high/low. "
-             "Dashed purple: flip levels. Triangle: entry. X: exit.", fontsize=10.5, color=MUTE)
-    fig.tight_layout(rect=(0, 0, 1, .96))
-    fig.savefig(f"{OUT}/sample_real.png", dpi=100); plt.close(fig)
+    u = 3 / n                                               # header heights scale with the figure
+    ty = 1 - 0.008 * u; cy = ty - 0.022 * u; top = cy - 0.012 * u
+    fig.suptitle(f"The silent flip{' v2' if version == 2 else ''} in the data: a random sample, not picked by outcome",
+                 fontsize=16, fontweight="bold", x=.02, ha="left", y=ty, va="top")
+    fig.text(.02, cy, "Development trades, primary rules, 15-minute candles. Shaded: candles 1 and 2. "
+             "Solid blue: yesterday's high/low. Dashed purple: flip levels. Triangle: entry. X: exit.",
+             fontsize=10.5, color=MUTE, va="top")
+    fig.tight_layout(rect=(0, 0, 1, top))
+    fig.savefig(f"{OUT}/{'sample_real' if version == 1 else f'sample_v2_seed{seed}'}.png", dpi=90); plt.close(fig)
 
 
 # ---------- 3. the result ----------
 def result():
-    T = pd.read_parquet("cache/flip_dev.parquet")
-    P = T[spec_mask(T, sim.PRIMARY)]
-    real, fake = P[P.kind == "real"], P[P.kind == "fake"]
-    rows = [("Real levels (877 trades)", *clustered(net(real), real.date)[:2]),
-            ("Fake levels from another day (915)", *clustered(net(fake), fake.date)[:2]),
-            ("Random entry, same trades (877)", *clustered(net(real, "R_rand", "c_rand"), real.date)[:2])]
-    for lv in ("RH", "FH", "RL", "FL"):
-        x = real[real.level == lv]
-        rows.append((f"  real, at {lv} ({len(x)})", *clustered(net(x), x.date)[:2]))
+    rows = []
+    for v, f, sp in ((1, "cache/flip_dev.parquet", sim.PRIMARY), (2, "cache/flip_v2_dev.parquet", sim.PRIMARY_V2)):
+        T = pd.read_parquet(f)
+        P = T[spec_mask(T, sp)]
+        real, fake = P[P.kind == "real"], P[P.kind == "fake"]
+        rows.append((f"v{v}: real levels ({len(real):,})", *clustered(net(real), real.date)[:2]))
+        rows.append((f"  v{v}: fake levels ({len(fake):,})", *clustered(net(fake), fake.date)[:2]))
+        if v == 2:      # v1's random-entry control had a look-ahead (v2 Amendment 2); only v2's is shown
+            rows.append((f"  v2: random entry, same trades", *clustered(net(real, "R_rand", "c_rand"), real.date)[:2]))
+            rows.append((f"  v2: his trailing stop", *clustered(real.R_trail_his - 3 * real.cost, real.date)[:2]))
     fig, ax = plt.subplots(figsize=(10, 5.2))
     ys = np.arange(len(rows))[::-1]
     for y, (lab, m, se) in zip(ys, rows):
@@ -191,12 +203,14 @@ def result():
     ax.axvline(0, color=INK, lw=1)
     ax.set_yticks(ys); ax.set_yticklabels([r[0] for r in rows], fontsize=10)
     ax.set_xlabel("net R per trade after a 3 bp cost (dot = mean, bar = 95% interval)", fontsize=9.5, color=MUTE)
-    ax.set_title("The silent flip loses, and fake levels do just as well", fontsize=13, fontweight="bold",
-                 color=INK, loc="left")
+    ax.set_title("Neither version makes money, and fake levels do as well", fontsize=13, fontweight="bold",
+                 color=INK, loc="left", pad=14)
+    ax.set_ylim(ys.min() - .6, ys.max() + .7)
     for k in ("top", "right", "left"):
         ax.spines[k].set_visible(False)
     ax.xaxis.grid(True, color=GRID); ax.tick_params(axis="y", length=0)
-    fig.text(.01, .01, "Development 2021-01 to 2025-03, top 100 US stocks a day. +1R = winning what you risked.",
+    fig.text(.01, .01, "Development 2021-01 to 2025-03, top 100 US stocks a day. v2 = rules rebuilt from his 3 Sept 2026 trade. "
+             "+1R = winning what you risked.",
              fontsize=8.5, color=MUTE)
     fig.tight_layout(rect=(0, .03, 1, 1))
     fig.savefig(f"{OUT}/result.png", dpi=120); plt.close(fig)
@@ -205,5 +219,10 @@ def result():
 if __name__ == "__main__":
     import os
     os.makedirs(OUT, exist_ok=True)
-    schematic(); result(); sample_real()
-    print("wrote", ", ".join(f"{OUT}/{n}" for n in ("schematic.png", "result.png", "sample_real.png")))
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "v2":       # python3 flip/render.py v2 [seed]
+        seed = int(sys.argv[2]) if len(sys.argv) > 2 else 4
+        sample_real(2, n=5, seed=seed); print(f"wrote {OUT}/sample_v2_seed{seed}.png")
+    else:
+        schematic(); result(); sample_real()
+        print("wrote", ", ".join(f"{OUT}/{n}" for n in ("schematic.png", "result.png", "sample_real.png")))
