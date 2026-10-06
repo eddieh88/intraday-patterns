@@ -390,3 +390,67 @@ most blocks.
 - **Holdout:** if M1 or M2 passes, it runs once, with coefficients fit on all of
   development. Confirmed if net of 6 bp > 0 with t ≥ 2.0.
 - If neither passes, the holdout stays sealed.
+
+### Amendment 5 — result
+
+`python3 ml/ols.py`.
+
+**Monotonicity:** mean y in bp by decile of the day rank, development pooled.
+- **atr_pct** is monotonic (ρ −0.95): +3.9 +1.8 +3.2 +1.8 +1.5 +0.1 +0.4 −1.9
+  −4.4 −5.8. The effect sits mostly in the two most volatile deciles, and it fades
+  over time. The top decile was −11.9 bp in 2021, −8.7 in 2022, −1.9 in 2023 and
+  −0.2 in 2024.
+- **tod1, tod5 and r_prev_oc** are not monotonic (ρ +0.02, −0.50, −0.33). They are
+  hump-shaped: the extreme deciles on both sides are lowest. This is the volatility
+  effect again (extreme movers are volatile stocks), and they were dropped.
+
+**OLS walk-forward:**
+- **M1 (atr_pct):** IC +0.026 (t 1.91), 6/7 blocks positive. Spread +6.57 bp/day
+  gross; net of 6 bp +0.57 (t 0.12), 5/7 blocks positive. **Fail.** The coefficient is
+  significant in every fold (t −2.6 to −3.3) but shrinks from −6.3 to −3.6 (×100)
+  across folds.
+- **M2 (+ atr_pct × ES opening move):** IC +0.025; net of 6 bp +0.98 (t 0.20), 4/7
+  blocks positive. **Fail.** The interaction's t ranges from −0.7 to −1.3 by fold.
+
+**The holdout stays sealed.** The opening-hour effect available from these features is
+that the most volatile stocks lag from 10:00 to 11:00. It has been fading since 2021,
+and after costs it is nothing.
+
+### Amendment 5 — result
+
+`python3 ml/ols.py`.
+
+**Monotonicity:** mean y in bp by decile of the day rank, development pooled.
+- **atr_pct** is monotonic (ρ −0.95): +3.9 +1.8 +3.2 +1.8 +1.5 +0.1 +0.4 −1.9
+  −4.4 −5.8. The effect sits mostly in the two most volatile deciles, and it fades.
+  The top decile was −11.9 bp in 2021, −8.7 in 2022, −1.9 in 2023 and −0.2 in 2024.
+- **tod1, tod5 and r_prev_oc** are not monotonic (ρ +0.02, −0.50, −0.33). They are
+  hump-shaped, with the extreme deciles on both sides lowest, and were dropped.
+
+**OLS walk-forward:**
+- **M1 (atr_pct):** IC +0.026 (t 1.91); spread +6.57 bp/day gross; net of 6 bp +0.57
+  (t 0.12), 5/7 blocks positive. **Fail.** The coefficient is significant in every
+  fold (t −2.6 to −3.3) but shrinks from −6.3 to −3.6 (×100).
+- **M2 (+ atr_pct × ES opening move):** net of 6 bp +0.98 (t 0.20), 4/7 blocks
+  positive. **Fail.** The interaction's t ranges from −0.7 to −1.3.
+
+## Amendment 6 — 2026-10-06: fold the hump-shaped drivers by magnitude (post-hoc; the holdout decides)
+
+Amendment 5 said non-monotonic features would be dropped, not reshaped. The user asked
+to reshape them. This is recorded as a further post-hoc step: every such step raises
+the chance of fitting noise, and only the sealed holdout can confirm a result.
+
+**Transform:** for tod1, tod5 and r_prev_oc, folded = |day rank|, from 0 (the middle of
+the day's distribution) to 0.5 (the most extreme in either direction), then re-ranked
+within the day. This is the one shape the deciles suggest, fixed here before any fit.
+
+**Tests:**
+1. **Monotonicity** of each folded feature, by the Amendment 5 rule (|ρ| ≥ 0.8 over
+   development deciles).
+2. **Does it add anything beyond volatility?** OLS walk-forward,
+   **M3 = atr_pct + the monotonic folded features.**
+   - Report each folded feature's coefficient by fold with clustered t.
+   - Report its correlation with atr_pct.
+3. **M3's strategy:** the same development criteria (net of 6 bp > 0, t ≥ 2.75,
+   ≥ 5/7 blocks positive). If it passes, the holdout runs once (net of 6 bp > 0,
+   t ≥ 2.0), with coefficients fit on all of development.
