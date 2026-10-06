@@ -319,3 +319,7 @@ setting chosen most often across folds, trained on all of development.
 - which settings were chosen
 - the test IC of every setting averaged over folds, to show how much the settings
   matter. That average is for information only and selects nothing.
+
+**Status, 2026-10-06:** the search was stopped at the user's request partway through,
+before any result was read. `ml/tune.py` is committed and can be rerun as registered.
+No verdict exists for Amendment 4.
