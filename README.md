@@ -202,6 +202,40 @@ random-entry control that could see the future. The holdout stays sealed, becaus
 passed. Details: [prereg/silent_flip.md](prereg/silent_flip.md),
 [prereg/silent_flip_v2.md](prereg/silent_flip_v2.md), [flip/figures/](flip/figures/).
 
+### 11. Can a model find what drives the hour after the opening range?
+
+LightGBM was asked to rank each day's top 100 stocks by their 10:00–11:00 return, using
+50 features known at 10:00:
+- the opening half hour, the overnight gap, and the same hour on earlier days
+- recent days' returns, distance to yesterday's levels, volatility and size
+- macro moves: ES, NQ, Russell, rates, the dollar, the yen, oil, gold, VIX and bitcoin
+- each stock's sensitivity to those moves, and its sector
+
+Walk-forward over seven half-year blocks from 2022 to 2025, with a leak test that fails
+the build if any feature sees 10:00.
+
+| | IC | before costs | after 6 bp a day |
+|---|---|---|---|
+| LightGBM, settings fixed in advance | +0.011 (t 1.1) | +4.3 bp/day | −1.7 |
+| LightGBM, tuned properly over 162 settings | +0.009 | +0.6 bp/day | −5.4 |
+| one feature, the stock's volatility (long the calmest fifth, short the most volatile) | +0.026 (t 1.9) | +6.6 bp/day | +0.6 |
+
+- **The model had nothing durable to learn.** Its training fit rose to 0.40 while the
+  out-of-sample IC stayed near 0.01, and tuning made it no better.
+- **The only stable driver is volatility:** the most volatile stocks lag in that hour.
+  It is the top feature in every block. It has faded from −12 bp for the most volatile
+  tenth in 2021 to about zero in 2024, and it is about the size of trading costs.
+- **The other apparent drivers are the same effect.** The macro context adjusts how
+  much volatility matters, and yesterday's extreme movers are the volatile stocks.
+  Neither adds anything to a simple OLS once volatility is in it.
+- **No driver changes measurably across years or regimes:** volatility, market trend
+  or rates.
+
+Nothing passed, so the holdout stays sealed. Before costs these effects have Sharpe
+ratios of about 0.6–0.75, like slow futures trend rules. But a book traded every day
+pays roughly 15% a year in costs, and three years cannot prove an edge that size.
+Details: [prereg/opening_ml.md](prereg/opening_ml.md).
+
 ## One pattern claim did check out
 
 **Fair value gaps fill at roughly the rates people say they do.**
@@ -250,6 +284,7 @@ artificial penalty — the comparison between them is what counts.
 | [explore_fx/](explore_fx/NOTES.md) | FX: reverse-engineering a posted one-rule strategy, the forensics, the searches |
 | [explore_own/](explore_own/NOTES.md) | Our own FX strategy work: spreads, the generator, what the edge is |
 | [flip/](flip/) | The silent flip: simulator, random-walk checks, exit sweep, sample sheets and figures |
+| [ml/](ml/) | The opening-hour ML study: feature builder with a leak test, walk-forward, driver and regime analysis, tuning, OLS |
 | [lib/](lib/), [data/](data/), [render/](render/), [diagnostics/](diagnostics/) | Shared code, data download, chart rendering, one-off checks — each with its own README |
 
 ## Words used here
