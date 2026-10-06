@@ -51,7 +51,12 @@ then reverses.
 | the early move is a fake-out that reverses | reverses 50.5% of the time — coin flip |
 | the pre-market sets the day's direction | right 49.2% of the time — coin flip |
 | the opening range gets swept, then reverses | the opposite: breaks tend to **continue** |
-| opening gaps fill the same day | small gaps usually do (69%), big gaps usually don't (27%) |
+| opening gaps fill the same day | small gaps almost always do (92%); gaps over 2% usually don't (about 40%)* |
+
+\* Corrected in October 2026. The first figures (69% and 27%) came from a daily table
+whose "high" and "low" covered 11:00–16:00 only, so fills in the first 90 minutes,
+where most gaps fill, were missed. See FINDINGS.md, "Correction — the daily table's
+high and low".
 
 ### 3. Everything lost exactly the same amount — which was the clue
 
@@ -236,20 +241,29 @@ ratios of about 0.6–0.75, like slow futures trend rules. But a book traded eve
 pays roughly 15% a year in costs, and three years cannot prove an edge that size.
 Details: [prereg/opening_ml.md](prereg/opening_ml.md).
 
-## One pattern claim did check out
+## One pattern claim matched its published numbers, and so does a random walk
 
-**Fair value gaps fill at roughly the rates people say they do.**
+**Fair value gaps fill at roughly the rates people say they do.** A random walk fills
+them as often or more, so the match says nothing about the pattern.
 
-| | we measured | published |
-|---|---|---|
-| price comes back to touch the gap | 78.7% | 74.6% |
-| fills it halfway | 68.4% | 61.2% |
-| fills it completely | 46.1% | 48.7% |
+| | we measured | published | random walk, same detector |
+|---|---|---|---|
+| price comes back to touch the gap | 78.7% | 74.6% | 83.5% |
+| fills it halfway | 68.4% | 61.2% | 79.0% |
+| fills it completely | 46.1% | 48.7% | 69.5% |
 
-The geometry is real. Trading it (break of structure → gap → entry on
-the tap) did no better than a random entry: −0.109R against −0.121R. Both
-numbers were measured before the cost fix in part 3, so both carry the same
-artificial penalty — the comparison between them is what counts.
+A gap is a price band crossed a few bars earlier, close to the current price, and
+any wandering price tends to revisit nearby prices within a session. Real stocks
+fill gaps *less* often than the random walk does, especially full fills. That fits
+the small continuation found elsewhere in this repo. (The random walk: 6,000
+simulated sessions, 60 price steps per 5-minute bar, run through `e12_fvg.py`'s
+detector and fill tracker. That tracker counts a full fill only when a single bar
+spans the gap, which undercounts full fills in both columns alike.)
+
+Trading the gap (break of structure → gap → entry on the tap) did no better than a
+random entry: −0.109R against −0.121R. Both numbers were measured before the cost
+fix in part 3, so both carry the same artificial penalty. The comparison between
+them is what counts.
 
 ## What this test can't see
 

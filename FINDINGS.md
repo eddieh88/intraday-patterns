@@ -8,7 +8,7 @@ Data: MarketParquet `stock_5min`, 2021-01-04 .. 2026-09-21, 1,462 sessions,
 | # | claim tested | source of claim | measurement | universe | n | result |
 |---|---|---|---|---|---|---|
 | E1 | the open differs from the rest of the day | practitioner consensus | median 5-min bar range and volume share, by 30-min block | top 300 by $vol, 78 sampled days | 78 days | **CONFIRMED** 2.94x midday range; 35% of volume in 23% of hours |
-| E2 | opening gaps fill the same session | "gaps always fill" | % of gap days where price trades back through prior close | top 200 | 275,399 | **SIZE-DEPENDENT** 69% for <0.2% gaps, 27% for >2% |
+| E2 | opening gaps fill the same session | "gaps always fill" | % of gap days where price trades back through prior close | top 200 | 275,399 | **SIZE-DEPENDENT** 69% for <0.2% gaps, 27% for >2% — **understated; corrected about 92% and 40%, see the correction below** |
 | E3 | the opening move is a false move that reverses | ICT "PO3 / judas swing" | sign agreement between 9:30-10:00 and 10:00-11:00 | top 200 | 274,142 | **NULL** 50.5% reversal vs 50% chance |
 | E4 | the opening range is swept then reverses | ICT liquidity-sweep | % of OR breaks that close back inside; fade vs hold return | top 200 | 113,513 | **REFUTED** breaks continue; fading loses 5.7bp, t=-9.3 |
 | E5 | pre-market determines the day's direction | "session script" post | corr(04:00-09:30 move, 9:30-11:00 move); sweep-and-reverse rule | top 200 | 261,143 | **REFUTED** 49.2% same-direction; sweep rule loses, t=-6.1 |
@@ -386,6 +386,30 @@ over all trades.
 
 **Not rerun:** E1–E13. They are marked pre-fix, and E2–E5 report percentages
 rather than R, but they were measured on the hindsight pool.
+
+## Correction — the daily table's high and low (October 2026)
+
+`data/build_daily.py` labels each day's bars as pre (<09:30), or (09:30–10:00), open
+(10:00–11:00) and rth (11:00–16:00). Its `hi_rth` / `lo_rth`, and the prior-day `pdh` /
+`pdl` built from them, therefore cover **11:00–16:00 only**. On 56% of days the real
+high or low of the session is set before 11:00. The table also ignores half days.
+
+| | as reported | recomputed over the full 09:30–16:00 session |
+|---|---|---|
+| E2, gaps under 0.2% that fill (up / down) | 70% / 71% | **92% / 93%** |
+| E2, gaps of 0.5–1% | 55% / 54% | 69% / 69% |
+| E2, gaps over 2% | 35% / 32% | **41% / 39%** |
+| E5, the pre-market sweep-and-reverse rule | −4.3 bp, t −6.7 | −6.0 bp, t −7.9 (the conclusion stands) |
+
+(The "as reported" column here is the current table; the original E2 run reported
+69% and 27% on an earlier universe.)
+
+- **Affected:** E2 and E5. E6, E6b and E8–E11 used `pdh` / `pdl` as levels; they were
+  already superseded by E16–E18, which do not.
+- **Unaffected:** E17/E18, the retest study, the selection study, and the `stops/`,
+  `flip/` and `ml/` studies all build their levels from the bars.
+- **Fix pending:** rebuild the table over the full, half-day-aware session and rerun
+  E2 and E5.
 
 ## Limitations — all of them
 
