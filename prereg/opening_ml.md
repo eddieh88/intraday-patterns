@@ -231,3 +231,57 @@ makes its level drift: it read about 70 in June 2023, when the VIX was near 14.
 
 The smoke test read 300 name-days (2023-06-01 to 06-05) only, to check scales and
 missing values. No target was compared with any feature.
+
+## Results — development, 2026-10-06
+
+`python3 ml/build.py && python3 ml/walk.py && python3 ml/drivers.py`.
+- **Data:** 104,052 name-days over 1,044 sessions, 50 features (34 ranked
+  across stocks, 16 context).
+- **Out of sample:** the seven blocks from 2022-01 to 2025-03, 813 days.
+
+| | IC | t | blocks + | spread, gross bp/day | net 6 bp | t | blocks + (net) |
+|---|---|---|---|---|---|---|---|
+| LightGBM | +0.011 | 1.08 | 4/7 | +4.27 | −1.73 | −0.45 | 4/7 |
+| ridge | +0.003 | 0.26 | 4/7 | +0.45 | −5.55 | −1.69 | 0/7 |
+| B1, opening momentum | −0.002 | −0.27 | 3/7 | +3.10 | −2.90 | −1.06 | 3/7 |
+
+**The model has no signal (fail), and its strategy does not pay (fail).**
+- LightGBM stopped after 1–46 trees per block, and ridge chose its largest
+  penalty in 6 of 7 blocks: the same "nothing to learn" pattern as the selection
+  study.
+- The model's IC by block: +0.015, +0.046, +0.053, +0.014, −0.038, −0.012, −0.020.
+  It was positive through 2023 and negative from 2024.
+- LightGBM minus B1 IC: +0.013 (t 1.03).
+
+**Drivers (mean |SHAP|):**
+- **atr_pct, the stock's volatility (ATR20 / price):** top 5 in 7/7 folds. Its own
+  IC is negative in 6 of 7 blocks (−0.067 to +0.018). Calmer stocks beat
+  more volatile ones from 10:00 to 11:00.
+- **Market context:** ES's 09:30–09:58 move (top 5 in 6/7), Russell minus ES
+  (6/7) and market volatility (4/7). These only act through interactions; in part
+  this is beta: a stock's volatility matters more on mornings the market moves.
+- **Same-time-of-day persistence:** tod1 has IC +0.032, +0.007, −0.006, −0.018,
+  +0.028, +0.020, +0.027 by block. It is positive in 5 of 7, small, and rarely in
+  the model's top 5.
+
+**Distilled rule, long the calmest fifth and short the most volatile:** only atr_pct
+met the stability bar. IC +0.026 (t 1.91), positive in 5 of 7 blocks; gross
+spread +6.57 bp/day (t 1.36); **net of 6 bp, +0.57 bp/day (t 0.12). Fail.**
+
+**Do the drivers change? (Amendment 2)**
+- **Over time:** no feature's IC differs across blocks beyond noise. The
+  smallest p is 0.018 (pool rank and dollar volume), against the Bonferroni
+  threshold of 0.0015.
+- **By regime:** none differs between volatility thirds, ES trend up/down or ZN
+  moves up/down. The smallest p are 0.019 (CL exposure, by rates), 0.023 (the
+  09:45–10:00 return, by trend) and 0.032 (5-day same-time persistence, by
+  volatility), against 0.00049. With 136 such tests, a few p-values near 0.02 are
+  what chance produces.
+- So part 3 (regime switching) does not run. Given the power (differences of
+  about 0.025 in IC are detectable), the drivers' effects are stable, or vary by
+  too little to measure. Part 4 (SHAP interactions) was not run, because no
+  model or feature passed.
+
+**Nothing passed, so the holdout stays sealed.** The low-volatility tilt is the one
+consistent cross-sectional effect here, about 6–7 bp a day before costs. That is
+roughly the cost of trading it.
