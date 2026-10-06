@@ -14,12 +14,14 @@ import sim
 from flip_stats import clustered, clustered_diff, spec_mask, net, BP
 
 PERIOD = sys.argv[1] if len(sys.argv) > 1 else "dev"
+VERSION = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+PRIMARY, GRID = (sim.PRIMARY, sim.GRID) if VERSION == 1 else (sim.PRIMARY_V2, sim.GRID_V2)
 DEV = PERIOD == "dev"
 T_CRIT = 2.0 if DEV else 1.65
 T_CRIT_Q2 = 2.75 if DEV else 2.26          # Amendment 2: Q2 standard errors are ~1.37x too small
 Q3_BIAS = 0.04                                # Amendment 2: Q3 is biased against the setup by ~0.04R
 
-T = pd.read_parquet(f"cache/flip_{PERIOD}.parquet")
+T = pd.read_parquet(f"cache/flip_{PERIOD}.parquet" if VERSION == 1 else f"cache/flip_v2_{PERIOD}.parquet")
 T["block"] = np.minimum(T.date.dt.year, 2024)
 
 
@@ -32,7 +34,7 @@ def q_stats(x):
     return q1, q2, q3
 
 
-P = T[spec_mask(T, sim.PRIMARY)]
+P = T[spec_mask(T, PRIMARY)]
 real = P[P.kind == "real"]
 print(f"{PERIOD}: primary spec, {len(real):,} real trades on {real.date.nunique()} sessions "
       f"({real.symbol.nunique()} names); {(P.kind == 'fake').sum():,} fake-level trades")
@@ -40,7 +42,7 @@ print(f"net R at {BP} bp, session-clustered; critical t {T_CRIT} (Q2: {T_CRIT_Q2
 
 prim = q_stats(P)
 blocks = {b: q_stats(g) for b, g in P.groupby("block")} if DEV else {}
-grid = [q_stats(T[spec_mask(T, sp)]) for sp in sim.GRID] if DEV else []
+grid = [q_stats(T[spec_mask(T, sp)]) for sp in GRID] if DEV else []
 names = ("Q1 pays          real", "Q2 levels matter real - fake", "Q3 timing        real - random")
 for q, name in enumerate(names):
     m, se, t = prim[q]
@@ -64,9 +66,19 @@ rep = {
     "to the close": (real.out == 2).mean(), "median target, R": real.tgt_R.median(),
     "gross R": real.R.mean(), "net R 1bp": net(real, bp=1).mean(), "net R 6bp": net(real, bp=6).mean(),
     "net R, entry to 11:00": net(real, "R_late", "c_late").mean(),
-    "net R, his trailing stop": (real.R_trail - BP * real.cost).mean(),
+    "net R, trail v1 (15-min)": (real.R_trail - BP * real.cost).mean(),
+    "net R, trail like his (3 bars)": (real.R_trail_his - BP * real.cost).mean() if "R_trail_his" in real else np.nan,
     "setups per name per month": len(real) / real.symbol.nunique() / max(1, real.date.dt.to_period('M').nunique()),
 }
+pool = pd.read_parquet("cache/intraday_pool.parquet")
+pool = pool[(pool.rk <= 100) & pool.date.isin(T.date.unique() if not DEV else pool.date)]
+nd = pool[(pool.date >= T.date.min()) & (pool.date <= T.date.max())]
+nd = len(nd)
+rep["stock-days in the universe"] = nd
+rep["filled trades per stock-day"] = len(real) / nd
+rep["filled trades per stock per year"] = 252 * len(real) / nd
+rep["filled trades per day, 100-stock scan"] = len(real) / real.date.nunique() * real.date.nunique() / (nd / 100)
+rep["filled trades per week, 5-stock scan"] = 5 * 5 * len(real) / nd
 for k, v in rep.items():
     print(f"  {k:28s} {v:,.4f}" if isinstance(v, float) else f"  {k:28s} {v:,}")
 print()
@@ -84,5 +96,5 @@ print(f"  one per day: {n} days with a trade, mean {m:+.4f} R/day, t {t:+.2f}, p
 if DEV:
     print("\nGRID (Q1 net R, real) by spec:")
     g = pd.DataFrame([dict(strong=sp.strong, body=sp.body, tol=sp.tol, target=sp.target, q1=r[0][0], q2=r[1][0], q3=r[2][0])
-                      for sp, r in zip(sim.GRID, grid)])
+                      for sp, r in zip(GRID, grid)])
     print(g.pivot_table(index=["strong", "body"], columns=["target", "tol"], values="q1").round(3).to_string())

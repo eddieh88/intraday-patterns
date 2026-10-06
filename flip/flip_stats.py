@@ -37,7 +37,8 @@ def clustered_diff(x, gx, y, gy):
 
 
 def spec_mask(T, sp):
-    return (T.strong == sp.strong) & (T.body == sp.body) & (T.tol == sp.tol) & (T.target == sp.target)
+    m = (T.strong == sp.strong) & (T.body == sp.body) & (T.tol == sp.tol) & (T.target == sp.target)
+    return m & (T.flat == sp.flat) if "flat" in T else m
 
 
 def net(x, col="R", cost="cost", bp=BP):

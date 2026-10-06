@@ -31,6 +31,8 @@ def walk(rng, p0, sig, n_bars):
     return opens, hi, lo, path[:, -1], path[-1, -1]
 
 NAMES = int(os.environ.get("RW_NAMES", 100))
+VERSION = int(os.environ.get("RW_VERSION", 1))
+PRIMARY = sim.PRIMARY if VERSION == 1 else sim.PRIMARY_V2
 MONTHS, DAYS, WARM = int(os.environ.get("RW_MONTHS", 51)), 21, sim.LOOKBACK + 3
 RTH = 78
 HH = 9.5 + np.arange(RTH) * 5 / 60
@@ -50,14 +52,14 @@ def run_month(m):
             o, h, l, c, p = walk(rng, p, sig[i], RTH)
             H = hist[i]
             if d >= WARM:
-                r, today = sim.name_day(o, h, l, c, HH, H, trade_rng)
+                r, today = sim.name_day(o, h, l, c, HH, H, trade_rng, VERSION)
                 for x in r:
                     x["date"], x["symbol"] = date, i
                 rows += r
             else:
                 _, today = sim.name_day(o, h, l, c, HH, [], trade_rng)
                 if len(H) >= 2:
-                    today["ratios"] = np.array(sim.levels_from(H)) / o[0]
+                    today["ratios"] = np.array(sim.levels_from(H, VERSION == 2)) / o[0]
             H.append(today)
             del H[:-(sim.LOOKBACK + 2)]
             price[i] = p
@@ -69,8 +71,8 @@ def main():
     with Pool(12) as p:
         rows = [r for month in p.map(run_month, range(MONTHS)) for r in month]
     T = pd.DataFrame(rows)
-    T.to_parquet(f"cache/flip_random_walk_{NAMES}_s{os.environ.get('RW_SEED', 13)}.parquet", index=False)
-    x = T[spec_mask(T, sim.PRIMARY)]
+    T.to_parquet(f"cache/flip{'' if VERSION == 1 else '_v2'}_random_walk_{NAMES}_s{os.environ.get('RW_SEED', 13)}.parquet", index=False)
+    x = T[spec_mask(T, PRIMARY)]
     real, fake = x[x.kind == "real"], x[x.kind == "fake"]
     print(f"{len(T):,} random-walk rows; primary: {len(real):,} real and {len(fake):,} fake trades "
           f"over {T.date.nunique()} sessions ({time.time() - t0:.0f}s)\n")

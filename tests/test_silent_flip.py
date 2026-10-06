@@ -101,3 +101,43 @@ def test_trailing_stop_moves_to_break_even_after_one_r():
     assert out == 0 and R == pytest.approx(0.0, abs=1e-9)
     R0, _ = sim.exits(o, h, l, c, 6, -1, 100.5, 101.0, 98.0)
     assert R0 == pytest.approx((100.5 - 100.6) / 0.5)      # without trailing it rides to the 100.6 close
+
+
+# ---------- version 2 ----------
+
+def test_v2_flip_high_can_be_a_gap_down_opening_bar():
+    # session 0 closes at its high (79); session 1 gaps down, its first bar (78.3) is a
+    # within-session swing; session 2 is yesterday with RH 77.2.
+    H = np.array([78.0, 78.5, 79.0,   78.3, 77.0, 76.9,   77.2, 76.8, 76.5])
+    L = H - 0.5
+    sess = np.repeat([0, 1, 2], 3)
+    v1, _ = sim.flip_levels(H, L, sess, 2, RH=77.2, RL=70.0)
+    v2, _ = sim.flip_levels(H, L, sess, 2, RH=77.2, RL=70.0, within=True)
+    assert v2 == 78.3                     # what he drew for UBER on 2026-09-03
+    assert v1 != 78.3                     # across days, 78.3 sits below the 79 before it
+
+
+def test_v2_tolerances_are_in_candle_1_units_and_a_flat_candle_2_counts():
+    # candle 1 stops 4c short of the 101.2 level: 0.04 of a 1.1 range is under 0.10 (v2),
+    # but 0.4 of a 0.1 ATR15 is over 0.25 (v1). Candle 2 closes up 1c: flat enough for v2.
+    O, H, L, C = pattern_bars(c1=(100.0, 101.16, 100.06, 101.1), c2=(101.1, 101.15, 100.7, 101.11))
+    args = dict(atr=0.1, RH=101.2, RL=98.0, FH=np.nan, FL=np.nan)
+    assert sim.pattern(O, H, L, C, sp=sim.PRIMARY, **args) is None
+    p = sim.pattern(O, H, L, C, sp=sim.PRIMARY_V2, **args)
+    assert p["side"] == -1 and p["trig"] == 100.7
+    assert p["stop"] == pytest.approx(101.16 + 0.10 * 1.1)   # buffer in candle-1 units
+
+
+def test_his_trailing_stop_follows_the_last_three_bars_after_one_r():
+    n = 78
+    o = np.full(n, 100.5); h = o + 0.05; l = o - 0.05; c = o.copy()
+    l[6] = 100.45; o[6] = 100.6                                  # short fills at 100.5, stop 101.0
+    for i, px in zip(range(7, 11), (100.2, 99.9, 99.6, 99.4)):   # falls past +1R (99.5) by bar 9
+        o[i] = px + 0.1; h[i] = px + 0.15; l[i] = px - 0.05; c[i] = px
+    o[11:] = 99.8; h[11:] = 99.9; l[11:] = 99.7; c[11:] = 99.8   # bounces into the trailed stop
+    _, _, _, _, starts = sim.bars15(o, h, l, c, HH)
+    R, out = sim.exits(o, h, l, c, 6, -1, 100.5, 101.0, 98.0, starts, trail="his")
+    assert out == 0
+    # +1R first at bar 10 (stop -> 100.05); bar 11 tightens it to 99.90 (highs of bars 9-11);
+    # bar 12 reaches 99.90
+    assert R == pytest.approx((100.5 - 99.9) / 0.5)

@@ -100,3 +100,21 @@ As in version 1, and also the frequency his claim can be compared with:
 did as well as the real ones. Version 2 will find several times more setups, closer
 to his rate. The question is whether the setups his eye takes, and version 1 did
 not, behave differently.
+
+## Amendment 1 — 2026-10-05, before any archive data under version 2
+
+**His-day check: PASS.** On Yahoo 15-minute bars for 2026-09-03:
+- **UBER:** short at the flip high (78.29), trigger 77.78, stop 78.48 (his 78.50),
+  target 75.36. It fills in the 10:00 bar (he entered at 10:07) and reaches the
+  target, +3.45R gross.
+- **NVDA, PFE, XOM, BAC:** no setup, as he called them.
+
+**Added, reported with no verdict:** a trailing stop closer to how he managed his
+live trade. He moved the stop three times as the trade worked: to the day's open,
+then twice to just above recent small highs on a 1-minute chart. Approximation:
+once the trade is +1R, the stop follows the extreme of the last three 5-minute
+bars. Version 1's trail (break-even at +1R, then the last 15-minute bar) is
+reported too. The verdicts stay on the fixed stop.
+
+**Added for review:** every version-2 trade is written to a file, and a random,
+outcome-blind sheet of them is rendered for checking by eye.

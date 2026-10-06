@@ -1,6 +1,7 @@
 """Run the silent flip on real 5-minute bars, one calendar month per worker.
 
   python3 flip/run.py              -> cache/flip_dev.parquet       (development only)
+  python3 flip/run.py dev 2        -> cache/flip_v2_dev.parquet    (version 2)
   HOLDOUT_UNLOCK=final-evaluation python3 flip/run.py holdout
                                    -> cache/flip_holdout.parquet   (once, see the prereg)
 
@@ -37,7 +38,7 @@ def sessions(f, names):
 
 
 def run_month(job):
-    month, files, warm, by_day, allnames = job
+    month, files, warm, by_day, allnames, version = job
     hist, rows = {}, []
     rng = np.random.default_rng([sim.SEED, month.year, month.month])
     for f in warm + files:
@@ -48,20 +49,20 @@ def run_month(job):
                 continue
             H = hist.setdefault(s, [])
             if live and s in names:
-                r, today = sim.name_day(o, h, l, c, hh, H, rng)
+                r, today = sim.name_day(o, h, l, c, hh, H, rng, version)
                 for x in r:
                     x["date"], x["symbol"] = day, s
                 rows += r
             else:
                 _, today = sim.name_day(o, h, l, c, hh, [], rng)     # record only
                 if len(H) >= 2:
-                    today["ratios"] = np.array(sim.levels_from(H)) / o[0]
+                    today["ratios"] = np.array(sim.levels_from(H, version == 2)) / o[0]
             H.append(today)
             del H[:-(sim.LOOKBACK + 2)]
     return rows
 
 
-def main(period="dev"):
+def main(period="dev", version=1):
     pool = pd.read_parquet("cache/intraday_pool.parquet")
     pool = pool[pool.rk <= 100]
     by_day = {pd.Timestamp(d): set(g) for d, g in pool.groupby("date").symbol}
@@ -72,7 +73,7 @@ def main(period="dev"):
     jobs = []
     for m, fs in pd.Series(keep, index=[DAY(f).to_period("M") for f in keep]).groupby(level=0):
         first = files.index(fs.iloc[0])
-        jobs.append((m, list(fs), files[max(0, first - WARM):first], by_day, allnames))
+        jobs.append((m, list(fs), files[max(0, first - WARM):first], by_day, allnames, version))
     t0, rows = time.time(), []
     with Pool(12) as p:
         for i, r in enumerate(p.imap(run_month, jobs)):
@@ -80,10 +81,10 @@ def main(period="dev"):
             print(f"  {i + 1}/{len(jobs)} months  {len(rows):,} rows  {time.time() - t0:.0f}s", flush=True)
     R = pd.DataFrame(rows)
     assert_sealed(R.date)
-    out = f"cache/flip_{period}.parquet"
+    out = f"cache/flip_{period}.parquet" if version == 1 else f"cache/flip_v2_{period}.parquet"
     R.to_parquet(out, index=False)
     print(f"{len(R):,} rows over {R.date.nunique()} sessions -> {out}  ({time.time() - t0:.0f}s)")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "dev")
+    main(sys.argv[1] if len(sys.argv) > 1 else "dev", int(sys.argv[2]) if len(sys.argv) > 2 else 1)
